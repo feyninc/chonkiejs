@@ -35,10 +35,10 @@
     "tokenization"
   ],
   "dependencies": {
-    "@chonkiejs/chunk": "^0.9.3"
+    "@chonkiejs/chunk": "^0.9.3",
+    "@kreuzberg/tree-sitter-language-pack": "^1.8.0"
   },
   "devDependencies": {
-    "@kreuzberg/tree-sitter-language-pack": "^1.8.0",
     "rimraf": "^6.1.3",
     "ts-node": "^10.9.2",
     "tsdown": "^0.21.8",

@@ -72,11 +72,12 @@ export class CodeChunker {
       let mod: any;
       try {
         mod = await import('@kreuzberg/tree-sitter-language-pack');
-      } catch {
+      } catch (e: any) {
         throw new Error(
           'CodeChunker requires @kreuzberg/tree-sitter-language-pack to be installed.\n' +
             'Install it with: pnpm add @kreuzberg/tree-sitter-language-pack\n' +
-            'Or pass a custom backend via the `backend` option.'
+            'Or pass a custom backend via the `backend` option.\n' +
+            `Underlying error: ${e?.message ?? e}`
         );
       }
       pack = (mod.default ?? mod) as unknown as CodeChunkerBackend;
