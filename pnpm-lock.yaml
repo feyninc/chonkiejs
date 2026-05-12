@@ -39,9 +39,6 @@ importers:
       '@chonkiejs/chunk':
         specifier: ^0.9.3
         version: 0.9.3
-      '@kreuzberg/tree-sitter-language-pack':
-        specifier: ^1.8.0
-        version: 1.8.0
     devDependencies:
       rimraf:
         specifier: ^6.1.3
@@ -64,6 +61,10 @@ importers:
       vitest:
         specifier: ^3.2.4
         version: 3.2.4(@types/node@22.19.15)(tsx@4.21.0)
+    optionalDependencies:
+      '@kreuzberg/tree-sitter-language-pack':
+        specifier: ^1.8.0
+        version: 1.8.0
 
   packages/token:
     dependencies:

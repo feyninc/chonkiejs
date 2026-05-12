@@ -35,7 +35,9 @@
     "tokenization"
   ],
   "dependencies": {
-    "@chonkiejs/chunk": "^0.9.3",
+    "@chonkiejs/chunk": "^0.9.3"
+  },
+  "optionalDependencies": {
     "@kreuzberg/tree-sitter-language-pack": "^1.8.0"
   },
   "devDependencies": {

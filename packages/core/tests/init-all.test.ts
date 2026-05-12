@@ -9,6 +9,13 @@ import {
   FastChunker,
 } from '../src/index';
 
+let nativeBackendAvailable = false;
+try {
+  const mod = await import('@kreuzberg/tree-sitter-language-pack');
+  const pack = (mod as any).default ?? mod;
+  nativeBackendAvailable = typeof pack.hasLanguage === 'function';
+} catch {}
+
 const sampleText = `The quick brown fox jumps over the lazy dog. This is a sample paragraph for testing chunkers.
 
 Another paragraph here with more text. Sentences should be detected properly! Does this work? Yes it does.
@@ -78,7 +85,7 @@ describe('Chunker Initialization', () => {
     console.log(`SemanticChunker: ${chunks.length} chunks`);
   });
 
-  it('CodeChunker initializes and chunks', async () => {
+  it.skipIf(!nativeBackendAvailable)('CodeChunker initializes and chunks', async () => {
     const chunker = await CodeChunker.create({
       language: 'javascript',
       chunkSize: 100,

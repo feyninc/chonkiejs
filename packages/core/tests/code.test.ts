@@ -1,8 +1,17 @@
 /// <reference types="vitest/globals" />
 import { CodeChunker } from '../src';
 
+let nativeBackendAvailable = false;
+try {
+  const mod = await import('@kreuzberg/tree-sitter-language-pack');
+  const pack = (mod as any).default ?? mod;
+  nativeBackendAvailable = typeof pack.hasLanguage === 'function';
+} catch {}
+
+const describeWithBackend = nativeBackendAvailable ? describe : describe.skip;
+
 describe('CodeChunker', () => {
-  describe('Creation', () => {
+  describeWithBackend('Creation', () => {
     it('should create a chunker with a specific language', async () => {
       const chunker = await CodeChunker.create({ language: 'javascript', chunkSize: 512 });
       expect(chunker).toBeInstanceOf(CodeChunker);
@@ -36,7 +45,7 @@ describe('CodeChunker', () => {
     });
   });
 
-  describe('Chunking', () => {
+  describeWithBackend('Chunking', () => {
     it('should return empty array for empty text', async () => {
       const chunker = await CodeChunker.create({ language: 'javascript' });
       expect(chunker.chunk('')).toHaveLength(0);
@@ -97,7 +106,7 @@ describe('CodeChunker', () => {
     });
   });
 
-  describe('Auto-detection', () => {
+  describeWithBackend('Auto-detection', () => {
     it('should auto-detect Python from shebang', async () => {
       const chunker = await CodeChunker.create({ language: 'auto' });
       const code = '#!/usr/bin/env python3\ndef hello():\n    print("hi")\n';
@@ -136,7 +145,7 @@ describe('CodeChunker', () => {
     });
   });
 
-  describe('Multi-byte character handling', () => {
+  describeWithBackend('Multi-byte character handling', () => {
     it('should produce correct char offsets for multi-byte content', async () => {
       const code = '// 日本語コメント\nconst x = 1;\n';
       const chunker = await CodeChunker.create({ language: 'javascript', chunkSize: 512 });
@@ -162,7 +171,7 @@ describe('CodeChunker', () => {
     });
   });
 
-  describe('toString', () => {
+  describeWithBackend('toString', () => {
     it('should return readable string representation', async () => {
       const chunker = await CodeChunker.create({ language: 'python', chunkSize: 256 });
       const str = chunker.toString();
