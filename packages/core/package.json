@@ -1,6 +1,6 @@
 {
   "name": "@chonkiejs/core",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "Core chunking library for Chonkie - lightweight and efficient text chunking",
   "license": "MIT",
   "homepage": "https://docs.chonkie.ai",
@@ -35,12 +35,13 @@
     "tokenization"
   ],
   "dependencies": {
-    "@chonkiejs/chunk": "^0.9.3",
-    "web-tree-sitter": "0.25.10"
+    "@chonkiejs/chunk": "^0.9.3"
+  },
+  "optionalDependencies": {
+    "@kreuzberg/tree-sitter-language-pack": "^1.8.0"
   },
   "devDependencies": {
     "rimraf": "^6.1.3",
-    "tree-sitter-wasms": "^0.1.13",
     "ts-node": "^10.9.2",
     "tsdown": "^0.21.8",
     "tsx": "^4.21.0",

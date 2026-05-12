@@ -26,5 +26,8 @@
     "tree-sitter-wasms": "^0.1.13",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@kreuzberg/tree-sitter-language-pack": "^1.8.0"
   }
 }

@@ -1,5 +1,11 @@
 # @chonkiejs/core
 
+## 0.0.10
+
+### Patch Changes
+
+- Fix CodeChunker, update CI workflow
+
 ## 0.0.5
 
 ### Patch Changes

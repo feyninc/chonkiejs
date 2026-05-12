@@ -8,6 +8,7 @@ export default defineConfig({
   platform: 'node',
   unbundle: true,
   sourcemap: true,
+  external: ['@kreuzberg/tree-sitter-language-pack'],
   dts: {
     sourcemap: true,
   },

@@ -15,17 +15,17 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [20.x]
+        node-version: [20.x, 22.x]
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-    - uses: pnpm/action-setup@v2
+    - uses: pnpm/action-setup@v4
       with:
         version: 10
 
     - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'pnpm'
@@ -35,6 +35,9 @@ jobs:
 
     - name: Build
       run: pnpm run build
+
+    - name: Lint package exports
+      run: pnpm --filter @chonkiejs/core exec publint
 
     - name: Run unit tests
       run: pnpm --filter @chonkiejs/core test

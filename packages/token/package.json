@@ -37,13 +37,13 @@
     "bert"
   ],
   "peerDependencies": {
-    "@chonkiejs/core": ">=0.0.5"
+    "@chonkiejs/core": ">=0.0.10"
   },
   "dependencies": {
     "@huggingface/transformers": "^3.5.1"
   },
   "devDependencies": {
-    "@chonkiejs/core": "^0.0.5",
+    "@chonkiejs/core": "workspace:*",
     "rimraf": "^6.0.1",
     "tsc-alias": "^1.8.16",
     "tsx": "^4.20.6",

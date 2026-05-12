@@ -20,7 +20,7 @@ export { SentenceChunker } from '@/sentence';
 export type { SentenceChunkerOptions } from '@/sentence';
 
 export { CodeChunker } from '@/code';
-export type { CodeChunkerOptions } from '@/code';
+export type { CodeChunkerOptions, CodeChunkerBackend } from '@/code';
 
 export { SemanticChunker } from '@/semantic';
 export type { SemanticChunkerOptions, EmbedFunction, EmbeddingModel } from '@/semantic';
