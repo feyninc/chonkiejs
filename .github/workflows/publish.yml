@@ -62,7 +62,7 @@ jobs:
         run: pnpm install
 
       - name: Build token
-        run: pnpm --filter @chonkiejs/token build
+        run: pnpm --filter @chonkiejs/token... build
 
       - name: Publish to npm
         run: pnpm --filter @chonkiejs/token publish --access public --no-git-checks
