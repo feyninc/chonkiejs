@@ -59,7 +59,7 @@ export class ElasticHandshake extends BaseHandshake {
     const operations: Array<Record<string, unknown>> = [];
     for (let i = 0; i < items.length; i++) {
       const chunk = items[i];
-      const id = this.generateId(`chunk-${i}:${chunk.text}`);
+      const id = this.generateId(chunk);
       operations.push(
         { index: { _index: this.indexName, _id: id } },
         {

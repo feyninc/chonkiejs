@@ -56,7 +56,7 @@ export class WeaviateHandshake extends BaseHandshake {
         startIndex: chunk.startIndex,
         endIndex: chunk.endIndex,
         tokenCount: chunk.tokenCount,
-        chunkId: this.generateId(`chunk-${i}:${chunk.text}`),
+        chunkId: this.generateId(chunk),
       },
       vectors: embeddings[i],
     }));

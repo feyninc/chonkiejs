@@ -117,6 +117,9 @@ export class CodeChunker {
       try {
         const result = this.pack.process(text, { language: lang, structure: true, imports: true });
         const structureScore = result.structure.length + result.imports.length;
+        if (result.metrics.errorCount === 0 && structureScore > 0) {
+          return lang;
+        }
         results.push([lang, result.metrics.errorCount, structureScore, result.metrics.totalLines]);
       } catch {
         continue;
@@ -134,14 +137,6 @@ export class CodeChunker {
     return results[0][0];
   }
 
-  private estimateChunkMaxBytes(text: string): number {
-    const textBytes = new TextEncoder().encode(text).length;
-    const textTokens = this.tokenizer.countTokens(text);
-    if (textTokens === 0) return textBytes;
-    const bytesPerToken = textBytes / textTokens;
-    return Math.max(1, Math.floor(this.chunkSize * bytesPerToken));
-  }
-
   chunk(text: string): Chunk[] {
     if (!text || !text.trim()) {
       return [];
@@ -154,24 +149,31 @@ export class CodeChunker {
       language = this.language;
     }
 
-    const chunkMaxBytes = this.estimateChunkMaxBytes(text);
+    const textByteLength = this.computeByteLength(text);
+    const textTokens = this.tokenizer.countTokens(text);
+    const chunkMaxBytes = textTokens === 0
+      ? textByteLength
+      : Math.max(1, Math.floor(this.chunkSize * (textByteLength / textTokens)));
+
     const result = this.pack.process(text, { language, chunkMaxSize: chunkMaxBytes });
 
     if (!result.chunks || result.chunks.length === 0) {
-      const tokenCount = this.tokenizer.countTokens(text);
       return [
         new Chunk({
           text,
           startIndex: 0,
           endIndex: text.length,
-          tokenCount,
+          tokenCount: textTokens,
         }),
       ];
     }
 
-    const encoder = new TextEncoder();
-    const fullBytes = encoder.encode(text);
-    const byteToChar = this.buildByteToCharMap(fullBytes, text);
+    const byteOffsets = new Set<number>();
+    for (const codeChunk of result.chunks) {
+      byteOffsets.add(codeChunk.startByte);
+      byteOffsets.add(codeChunk.endByte);
+    }
+    const byteToChar = this.resolveByteOffsets(text, byteOffsets);
 
     const chunks: Chunk[] = [];
     for (const codeChunk of result.chunks) {
@@ -179,34 +181,74 @@ export class CodeChunker {
       const tokenCount = this.tokenizer.countTokens(content);
       const startIndex = byteToChar.get(codeChunk.startByte) ?? 0;
       const endIndex = byteToChar.get(codeChunk.endByte) ?? text.length;
-      chunks.push(
-        new Chunk({
-          text: content,
-          startIndex,
-          endIndex,
-          tokenCount,
-        })
-      );
+      if (tokenCount > this.chunkSize) {
+        const subChunks = this.splitOversizedChunk(content, startIndex);
+        chunks.push(...subChunks);
+      } else {
+        chunks.push(
+          new Chunk({ text: content, startIndex, endIndex, tokenCount })
+        );
+      }
     }
 
     return chunks;
   }
 
-  private buildByteToCharMap(bytes: Uint8Array, text: string): Map<number, number> {
+  private splitOversizedChunk(text: string, baseOffset: number): Chunk[] {
+    const chunks: Chunk[] = [];
+    let pos = 0;
+    while (pos < text.length) {
+      let end = Math.min(pos + this.chunkSize, text.length);
+      while (end < text.length && this.tokenizer.countTokens(text.slice(pos, end)) > this.chunkSize) {
+        end--;
+      }
+      if (end <= pos) end = pos + 1;
+      const slice = text.slice(pos, end);
+      chunks.push(new Chunk({
+        text: slice,
+        startIndex: baseOffset + pos,
+        endIndex: baseOffset + end,
+        tokenCount: this.tokenizer.countTokens(slice),
+      }));
+      pos = end;
+    }
+    return chunks;
+  }
+
+  private computeByteLength(text: string): number {
+    let bytes = 0;
+    for (let i = 0; i < text.length; i++) {
+      const code = text.codePointAt(i)!;
+      if (code <= 0x7f) bytes += 1;
+      else if (code <= 0x7ff) bytes += 2;
+      else if (code <= 0xffff) bytes += 3;
+      else { bytes += 4; i++; }
+    }
+    return bytes;
+  }
+
+  private resolveByteOffsets(text: string, offsets: Set<number>): Map<number, number> {
     const map = new Map<number, number>();
+    if (offsets.size === 0) return map;
+    const sorted = [...offsets].sort((a, b) => a - b);
+    let target = 0;
     let byteIdx = 0;
-    for (let charIdx = 0; charIdx <= text.length; charIdx++) {
-      map.set(byteIdx, charIdx);
+    for (let charIdx = 0; charIdx <= text.length && target < sorted.length; charIdx++) {
+      while (target < sorted.length && sorted[target] === byteIdx) {
+        map.set(byteIdx, charIdx);
+        target++;
+      }
       if (charIdx < text.length) {
         const code = text.codePointAt(charIdx)!;
         if (code <= 0x7f) byteIdx += 1;
         else if (code <= 0x7ff) byteIdx += 2;
         else if (code <= 0xffff) byteIdx += 3;
-        else {
-          byteIdx += 4;
-          charIdx++; // surrogate pair
-        }
+        else { byteIdx += 4; charIdx++; }
       }
+    }
+    while (target < sorted.length) {
+      map.set(sorted[target], text.length);
+      target++;
     }
     return map;
   }

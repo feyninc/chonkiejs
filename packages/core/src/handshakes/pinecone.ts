@@ -56,7 +56,7 @@ export class PineconeHandshake extends BaseHandshake {
     const embeddings = await this.embed(texts);
 
     const vectors = items.map((chunk, i) => ({
-      id: this.generateId(`chunk-${i}:${chunk.text}`),
+      id: this.generateId(chunk),
       values: embeddings[i],
       metadata: {
         text: chunk.text,

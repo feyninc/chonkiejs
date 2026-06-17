@@ -1,5 +1,5 @@
 import { Chunk } from '@/types';
-import { createHash } from 'crypto';
+import { createHash } from 'node:crypto';
 
 export type EmbedFunction = (texts: string[]) => Promise<number[][]>;
 
@@ -36,37 +36,12 @@ export abstract class BaseHandshake {
   abstract searchByVector(embedding: number[], options?: { limit?: number }): Promise<HandshakeSearchResult[]>;
   abstract count(): Promise<number>;
 
-  protected generateId(text: string): string {
-    return createHash('sha256').update(text).digest('hex').slice(0, 32);
+  protected generateId(chunk: Chunk): string {
+    const input = `${chunk.startIndex}:${chunk.endIndex}:${chunk.text}`;
+    return createHash('sha256').update(input).digest('hex').slice(0, 32);
   }
 
   protected normalizeChunks(chunks: Chunk | Chunk[]): Chunk[] {
     return Array.isArray(chunks) ? chunks : [chunks];
-  }
-
-  protected buildMetadata(chunk: Chunk, index: number, containerName: string): Record<string, unknown> {
-    return {
-      text: chunk.text,
-      startIndex: chunk.startIndex,
-      endIndex: chunk.endIndex,
-      tokenCount: chunk.tokenCount,
-    };
-  }
-
-  protected parseResult(
-    id: string,
-    score: number,
-    data: Record<string, unknown>
-  ): HandshakeSearchResult {
-    const { text, startIndex, endIndex, tokenCount, ...rest } = data;
-    return {
-      id,
-      score,
-      text: text as string,
-      startIndex: startIndex as number,
-      endIndex: endIndex as number,
-      tokenCount: tokenCount as number,
-      metadata: Object.keys(rest).length > 0 ? rest : undefined,
-    };
   }
 }

@@ -18,6 +18,8 @@ export interface PgClient {
   query(text: string, values?: unknown[]): Promise<{ rows: Array<Record<string, unknown>>; rowCount: number }>;
 }
 
+const SAFE_IDENTIFIER = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
+
 export class PgvectorHandshake extends BaseHandshake {
   private client: PgClient;
   private tableName: string;
@@ -28,6 +30,11 @@ export class PgvectorHandshake extends BaseHandshake {
     super(options);
     this.client = options.client;
     this.tableName = options.tableName ?? 'chunks';
+    if (!SAFE_IDENTIFIER.test(this.tableName)) {
+      throw new Error(
+        `PgvectorHandshake: tableName must be a valid SQL identifier (letters, digits, underscores). Got: "${this.tableName}"`
+      );
+    }
     this.autoCreateTable = options.autoCreateTable ?? true;
   }
 
@@ -62,7 +69,7 @@ export class PgvectorHandshake extends BaseHandshake {
 
     for (let i = 0; i < items.length; i++) {
       const chunk = items[i];
-      const id = this.generateId(`chunk-${i}:${chunk.text}`);
+      const id = this.generateId(chunk);
       const vecStr = `[${embeddings[i].join(',')}]`;
       placeholders.push(`($${idx}, $${idx + 1}, $${idx + 2}, $${idx + 3}, $${idx + 4}, $${idx + 5})`);
       values.push(id, chunk.text, chunk.startIndex, chunk.endIndex, chunk.tokenCount, vecStr);

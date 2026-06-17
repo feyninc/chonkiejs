@@ -50,7 +50,7 @@ export class ChromaHandshake extends BaseHandshake {
 
     for (let i = 0; i < items.length; i++) {
       const chunk = items[i];
-      ids.push(this.generateId(`chunk-${i}:${chunk.text}`));
+      ids.push(this.generateId(chunk));
       documents.push(chunk.text);
       metadatas.push({
         startIndex: chunk.startIndex,

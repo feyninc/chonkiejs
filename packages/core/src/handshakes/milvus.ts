@@ -52,7 +52,7 @@ export class MilvusHandshake extends BaseHandshake {
     const embeddings = await this.embed(texts);
 
     const data = items.map((chunk, i) => ({
-      id: this.generateId(`chunk-${i}:${chunk.text}`),
+      id: this.generateId(chunk),
       vector: embeddings[i],
       text: chunk.text,
       startIndex: chunk.startIndex,

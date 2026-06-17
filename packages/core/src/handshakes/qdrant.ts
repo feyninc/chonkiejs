@@ -53,7 +53,7 @@ export class QdrantHandshake extends BaseHandshake {
     const embeddings = await this.embed(texts);
 
     const points = items.map((chunk, i) => ({
-      id: this.generateId(`chunk-${i}:${chunk.text}`),
+      id: this.generateId(chunk),
       vector: embeddings[i],
       payload: {
         text: chunk.text,

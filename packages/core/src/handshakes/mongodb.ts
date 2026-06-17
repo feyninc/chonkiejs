@@ -36,7 +36,7 @@ export class MongoDBHandshake extends BaseHandshake {
     const embeddings = await this.embed(texts);
 
     const docs = items.map((chunk, i) => ({
-      _id: this.generateId(`chunk-${i}:${chunk.text}`),
+      _id: this.generateId(chunk),
       text: chunk.text,
       startIndex: chunk.startIndex,
       endIndex: chunk.endIndex,

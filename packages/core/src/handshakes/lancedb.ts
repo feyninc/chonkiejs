@@ -37,7 +37,7 @@ export class LanceDBHandshake extends BaseHandshake {
     const embeddings = await this.embed(texts);
 
     const data = items.map((chunk, i) => ({
-      id: this.generateId(`chunk-${i}:${chunk.text}`),
+      id: this.generateId(chunk),
       text: chunk.text,
       startIndex: chunk.startIndex,
       endIndex: chunk.endIndex,
