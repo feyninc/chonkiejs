@@ -198,19 +198,26 @@ export class CodeChunker {
     const chunks: Chunk[] = [];
     let pos = 0;
     while (pos < text.length) {
-      let end = Math.min(pos + this.chunkSize, text.length);
-      while (end < text.length && this.tokenizer.countTokens(text.slice(pos, end)) > this.chunkSize) {
-        end--;
+      let lo = pos + 1;
+      let hi = text.length;
+      let best = pos + 1;
+      while (lo <= hi) {
+        const mid = (lo + hi) >>> 1;
+        if (this.tokenizer.countTokens(text.slice(pos, mid)) <= this.chunkSize) {
+          best = mid;
+          lo = mid + 1;
+        } else {
+          hi = mid - 1;
+        }
       }
-      if (end <= pos) end = pos + 1;
-      const slice = text.slice(pos, end);
+      const slice = text.slice(pos, best);
       chunks.push(new Chunk({
         text: slice,
         startIndex: baseOffset + pos,
-        endIndex: baseOffset + end,
+        endIndex: baseOffset + best,
         tokenCount: this.tokenizer.countTokens(slice),
       }));
-      pos = end;
+      pos = best;
     }
     return chunks;
   }
