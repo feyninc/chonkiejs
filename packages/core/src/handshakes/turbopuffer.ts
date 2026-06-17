@@ -25,7 +25,7 @@ export interface TurbopufferNamespace {
     dist: number;
     attributes?: Record<string, string | number | boolean | null>;
   }>>;
-  exists?(): Promise<{ approx_count?: number }>;
+  exists(): Promise<{ approx_count?: number }>;
 }
 
 export class TurbopufferHandshake extends BaseHandshake {
@@ -82,13 +82,7 @@ export class TurbopufferHandshake extends BaseHandshake {
   }
 
   async count(): Promise<number> {
-    if (this.namespace.exists) {
-      const info = await this.namespace.exists();
-      return info.approx_count ?? 0;
-    }
-    throw new Error(
-      'TurbopufferHandshake: count() requires the namespace to implement exists(). ' +
-        'Upgrade your turbopuffer client or implement exists() on your namespace object.'
-    );
+    const info = await this.namespace.exists();
+    return info.approx_count ?? 0;
   }
 }

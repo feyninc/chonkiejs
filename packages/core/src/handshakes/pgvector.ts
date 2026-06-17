@@ -71,7 +71,7 @@ export class PgvectorHandshake extends BaseHandshake {
       const chunk = items[i];
       const id = this.generateId(chunk);
       const vecStr = `[${embeddings[i].join(',')}]`;
-      placeholders.push(`($${idx}, $${idx + 1}, $${idx + 2}, $${idx + 3}, $${idx + 4}, $${idx + 5})`);
+      placeholders.push(`($${idx}, $${idx + 1}, $${idx + 2}, $${idx + 3}, $${idx + 4}, $${idx + 5}::vector)`);
       values.push(id, chunk.text, chunk.startIndex, chunk.endIndex, chunk.tokenCount, vecStr);
       idx += 6;
     }

@@ -264,6 +264,7 @@ describe('TurbopufferHandshake', () => {
           },
         }));
       },
+      async exists() { return { approx_count: storedIds.length }; },
     };
 
     const hs = new TurbopufferHandshake({ embeddings: mockEmbed, namespace });
