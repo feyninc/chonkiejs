@@ -32,7 +32,14 @@ jobs:
         run: pnpm --filter @chonkiejs/core build
 
       - name: Publish to npm
-        run: pnpm --filter @chonkiejs/core exec npm publish --access public --provenance --no-git-checks
+        run: |
+          pnpm --filter @chonkiejs/core exec npm publish --access public --provenance --no-git-checks 2>&1 | tee /tmp/publish.log || {
+            if grep -q "previously published versions" /tmp/publish.log; then
+              echo "Version already exists, skipping."
+            else
+              exit 1
+            fi
+          }
 
   publish-token:
     name: Publish @chonkiejs/token
@@ -61,4 +68,11 @@ jobs:
         run: pnpm --filter @chonkiejs/token... build
 
       - name: Publish to npm
-        run: pnpm --filter @chonkiejs/token exec npm publish --access public --provenance --no-git-checks
+        run: |
+          pnpm --filter @chonkiejs/token exec npm publish --access public --provenance --no-git-checks 2>&1 | tee /tmp/publish.log || {
+            if grep -q "previously published versions" /tmp/publish.log; then
+              echo "Version already exists, skipping."
+            else
+              exit 1
+            fi
+          }
