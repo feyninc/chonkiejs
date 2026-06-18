@@ -20,7 +20,7 @@ git clone https://github.com/chonkie-inc/chonkiejs.git
 cd chonkiejs
 
 # 2. Install dependencies   
-npm install
+pnpm install
 ```
 
 ## 🧪 Testing & Code Quality
@@ -28,9 +28,9 @@ npm install
 ### Running Tests
 
 ```bash
-npx jest tests/ # Run all tests
-npx jest tests/chunker/ # Run all tests in chunker
-npx jest tests/chunker/tokenChunker.test.ts # Run specific test file
+cd packages/core
+pnpm run test                              # Run all tests
+pnpm vitest run tests/handshakes.test.ts   # Run specific test file
 ```
 
 ### Documentation Style
@@ -56,11 +56,29 @@ function chunk_text(text: string, chunk_size: number): string[] {
 ## 📦 Project Structure
 
 ```
-src/
-├── chonkie/
-    ├── chunker/     # Local Chunkers
-    ├── cloud/       # Cloud API Clients
-    ├── types/       # Chonkie type definitions
+packages/core/src/
+├── types.ts          # Chunk class & shared types
+├── tokenizer.ts      # Tokenizer abstraction
+├── wasm.ts           # WASM initialization
+├── recursive.ts      # RecursiveChunker
+├── token.ts          # TokenChunker
+├── fast.ts           # FastChunker (WASM byte-based)
+├── sentence.ts       # SentenceChunker
+├── semantic.ts       # SemanticChunker (embedding-based)
+├── code.ts           # CodeChunker (tree-sitter)
+├── table.ts          # TableChunker
+├── handshakes/       # Vector DB wrappers
+│   ├── base.ts       # BaseHandshake abstract class
+│   ├── chroma.ts     # ChromaDB
+│   ├── pinecone.ts   # Pinecone
+│   ├── qdrant.ts     # Qdrant
+│   ├── weaviate.ts   # Weaviate
+│   ├── milvus.ts     # Milvus
+│   ├── mongodb.ts    # MongoDB Atlas Vector Search
+│   ├── elastic.ts    # Elasticsearch
+│   ├── lancedb.ts    # LanceDB
+│   ├── turbopuffer.ts # Turbopuffer
+│   └── pgvector.ts   # pgvector (PostgreSQL)
 ```
 
 ## 🎯 Contribution Opportunities
@@ -118,7 +136,7 @@ feat: add batch processing to WordChunker
 - **Make sure your PR is for the `development` branch**
 - All PRs need at least one review
 - Maintainers will review for:
-  - Code quality (via ruff)
+  - Code quality
   - Test coverage
   - Performance impact
   - Documentation completeness
