@@ -63,4 +63,4 @@ jobs:
         run: pnpm --filter @chonkiejs/token... build
 
       - name: Publish to npm
-        run: pnpm --filter @chonkiejs/token publish --access public --no-git-checks
+        run: pnpm --filter @chonkiejs/token exec npm publish --access public --provenance --no-git-checks
