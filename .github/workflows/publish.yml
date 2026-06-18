@@ -33,7 +33,7 @@ jobs:
         run: pnpm --filter @chonkiejs/core build
 
       - name: Publish to npm
-        run: pnpm --filter @chonkiejs/core publish --access public --no-git-checks
+        run: pnpm --filter @chonkiejs/core exec npm publish --access public --provenance --no-git-checks
 
   publish-token:
     name: Publish @chonkiejs/token
