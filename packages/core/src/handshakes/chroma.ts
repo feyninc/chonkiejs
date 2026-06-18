@@ -6,7 +6,7 @@ import {
 } from './base';
 
 export interface ChromaHandshakeOptions extends BaseHandshakeOptions {
-  /** Pre-initialized ChromaDB collection. */
+  /** Pre-initialized ChromaDB collection. Must use cosine distance (hnsw:space = "cosine"). */
   collection: ChromaCollection;
 }
 

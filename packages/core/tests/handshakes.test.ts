@@ -154,6 +154,17 @@ describe('MongoDBHandshake', () => {
         store.push(...docs);
         return { insertedCount: docs.length };
       },
+      async bulkWrite(ops: any[]) {
+        for (const op of ops) {
+          const { filter, update } = op.updateOne;
+          const existing = store.findIndex((d: any) => d._id === filter._id);
+          if (existing >= 0) {
+            Object.assign(store[existing], update.$set);
+          } else {
+            store.push({ _id: filter._id, ...update.$set });
+          }
+        }
+      },
       aggregate() {
         return {
           async toArray() {

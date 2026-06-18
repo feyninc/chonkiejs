@@ -14,6 +14,7 @@ export interface MongoDBHandshakeOptions extends BaseHandshakeOptions {
 
 export interface MongoCollection {
   insertMany(docs: Array<Record<string, unknown>>): Promise<{ insertedCount: number }>;
+  bulkWrite(ops: Array<Record<string, unknown>>): Promise<unknown>;
   aggregate(pipeline: Array<Record<string, unknown>>): { toArray(): Promise<Array<Record<string, unknown>>> };
   countDocuments(): Promise<number>;
 }
@@ -35,16 +36,23 @@ export class MongoDBHandshake extends BaseHandshake {
     const texts = items.map(c => c.text);
     const embeddings = await this.embed(texts);
 
-    const docs = items.map((chunk, i) => ({
-      _id: this.generateId(chunk),
-      text: chunk.text,
-      startIndex: chunk.startIndex,
-      endIndex: chunk.endIndex,
-      tokenCount: chunk.tokenCount,
-      embedding: embeddings[i],
+    const ops = items.map((chunk, i) => ({
+      updateOne: {
+        filter: { _id: this.generateId(chunk) },
+        update: {
+          $set: {
+            text: chunk.text,
+            startIndex: chunk.startIndex,
+            endIndex: chunk.endIndex,
+            tokenCount: chunk.tokenCount,
+            embedding: embeddings[i],
+          },
+        },
+        upsert: true,
+      },
     }));
 
-    await this.collection.insertMany(docs);
+    await this.collection.bulkWrite(ops);
   }
 
   async search(query: string, options?: { limit?: number }): Promise<HandshakeSearchResult[]> {

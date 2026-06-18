@@ -19,16 +19,19 @@ export interface HandshakeSearchResult {
 
 export interface BaseHandshakeOptions {
   embeddings: EmbedFunction | EmbeddingModel;
+  idPrefix?: string;
 }
 
 export abstract class BaseHandshake {
   protected readonly embed: EmbedFunction;
+  protected readonly idPrefix: string;
 
   constructor(options: BaseHandshakeOptions) {
     const { embeddings } = options;
     this.embed = typeof embeddings === 'function'
       ? embeddings
       : (texts) => embeddings.embed(texts);
+    this.idPrefix = options.idPrefix ?? '';
   }
 
   abstract write(chunks: Chunk | Chunk[]): Promise<void>;
@@ -37,7 +40,7 @@ export abstract class BaseHandshake {
   abstract count(): Promise<number>;
 
   protected generateId(chunk: Chunk): string {
-    const input = `${chunk.startIndex}:${chunk.endIndex}:${chunk.text}`;
+    const input = `${this.idPrefix}${chunk.startIndex}:${chunk.endIndex}:${chunk.text}`;
     return createHash('sha256').update(input).digest('hex').slice(0, 32);
   }
 

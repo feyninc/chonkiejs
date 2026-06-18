@@ -30,7 +30,7 @@ pnpm install
 ```bash
 cd packages/core
 pnpm run test                              # Run all tests
-npx vitest run tests/handshakes.test.ts    # Run specific test file
+pnpm vitest run tests/handshakes.test.ts   # Run specific test file
 ```
 
 ### Documentation Style

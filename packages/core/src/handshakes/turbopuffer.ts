@@ -44,7 +44,7 @@ export class TurbopufferHandshake extends BaseHandshake {
     const embeddings = await this.embed(texts);
 
     const ids = items.map((chunk) => this.generateId(chunk));
-    const attributes: Record<string, Array<string | number | null>> = {
+    const attributes: Record<string, Array<string | number | boolean | null>> = {
       text: items.map(c => c.text),
       startIndex: items.map(c => c.startIndex),
       endIndex: items.map(c => c.endIndex),
@@ -73,7 +73,7 @@ export class TurbopufferHandshake extends BaseHandshake {
 
     return results.map(r => ({
       id: r.id,
-      score: 1 / (1 + r.dist),
+      score: 1 - r.dist,
       text: (r.attributes?.text as string) ?? '',
       startIndex: (r.attributes?.startIndex as number) ?? 0,
       endIndex: (r.attributes?.endIndex as number) ?? 0,
