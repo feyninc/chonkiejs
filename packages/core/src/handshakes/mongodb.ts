@@ -52,7 +52,10 @@ export class MongoDBHandshake extends BaseHandshake {
       },
     }));
 
-    await this.collection.bulkWrite(ops);
+    const BULK_WRITE_BATCH_SIZE = 500;
+    for (let i = 0; i < ops.length; i += BULK_WRITE_BATCH_SIZE) {
+      await this.collection.bulkWrite(ops.slice(i, i + BULK_WRITE_BATCH_SIZE));
+    }
   }
 
   async search(query: string, options?: { limit?: number }): Promise<HandshakeSearchResult[]> {
