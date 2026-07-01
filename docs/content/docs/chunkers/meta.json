@@ -1,0 +1,15 @@
+{
+  "title": "Chunkers",
+  "icon": "Scissors",
+  "pages": [
+    "choosing-a-chunker",
+    "overview",
+    "recursive-chunker",
+    "token-chunker",
+    "sentence-chunker",
+    "semantic-chunker",
+    "code-chunker",
+    "table-chunker",
+    "fast-chunker"
+  ]
+}

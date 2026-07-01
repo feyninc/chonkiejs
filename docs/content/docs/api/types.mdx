@@ -1,0 +1,85 @@
+---
+title: "Types"
+description: "Core types and interfaces"
+---
+
+## Chunk
+
+Represents a text chunk with metadata.
+
+```typescript
+class Chunk {
+  text: string;       // The chunk text content
+  startIndex: number; // Starting position in original text
+  endIndex: number;   // Ending position in original text
+  tokenCount: number; // Number of tokens in the chunk
+}
+```
+
+### Constructor
+
+```typescript
+new Chunk(data: {
+  text: string;
+  startIndex: number;
+  endIndex: number;
+  tokenCount: number;
+})
+```
+
+### Methods
+
+#### `toString(): string`
+
+Returns the chunk's text content.
+
+```typescript
+const chunk = new Chunk({
+  text: 'Hello',
+  startIndex: 0,
+  endIndex: 5,
+  tokenCount: 5
+});
+
+console.log(chunk.toString()); // 'Hello'
+```
+
+## RecursiveChunkerOptions
+
+```typescript
+interface RecursiveChunkerOptions {
+  chunkSize?: number;              // Default: 512
+  minCharactersPerChunk?: number;  // Default: 24
+  rules?: RecursiveRules;          // Default: standard rules
+  tokenizer?: Tokenizer;           // Default: character tokenizer
+}
+```
+
+## FastChunkerOptions
+
+```typescript
+interface FastChunkerOptions {
+  chunkSize?: number;          // Default: 4096
+  delimiters?: string;         // Default: "\n.?"
+  pattern?: string | Uint8Array;
+  prefix?: boolean;            // Default: false
+  consecutive?: boolean;       // Default: false
+  forwardFallback?: boolean;   // Default: false
+}
+```
+
+## RecursiveLevelConfig
+
+```typescript
+interface RecursiveLevelConfig {
+  delimiters?: string | string[];
+  whitespace?: boolean;
+  includeDelim?: 'prev' | 'next' | 'none';
+}
+```
+
+## IncludeDelim
+
+```typescript
+type IncludeDelim = 'prev' | 'next' | 'none';
+```

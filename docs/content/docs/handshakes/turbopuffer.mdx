@@ -1,0 +1,60 @@
+---
+title: "TurbopufferHandshake"
+description: "Store and search chunks with Turbopuffer"
+---
+
+The `TurbopufferHandshake` connects ChonkieJS to [Turbopuffer](https://turbopuffer.com/), an edge-optimized vector search service designed for low-latency queries.
+
+## Installation
+
+```bash
+npm install @chonkiejs/core @turbopuffer/turbopuffer
+```
+
+## Initialization
+
+```typescript
+import { TurbopufferHandshake } from '@chonkiejs/core';
+import { Turbopuffer } from '@turbopuffer/turbopuffer';
+
+const tpuf = new Turbopuffer({ apiKey: process.env.TURBOPUFFER_API_KEY });
+const namespace = tpuf.namespace('my-docs');
+
+const handshake = new TurbopufferHandshake({
+  namespace,
+  embeddings: async (texts) => embedModel.encode(texts),
+});
+```
+
+## Parameters
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `namespace` | `TurbopufferNamespace` | — | Pre-initialized Turbopuffer namespace |
+| `embeddings` | `EmbedFunction \| EmbeddingModel` | — | Embedding function or model |
+| `idPrefix` | `string` | `''` | Prefix for generated chunk IDs |
+
+## Usage
+
+```typescript
+import { RecursiveChunker, TurbopufferHandshake } from '@chonkiejs/core';
+
+const chunker = new RecursiveChunker({ chunkSize: 512 });
+const chunks = await chunker.chunk(document);
+
+await handshake.write(chunks);
+
+const results = await handshake.search('user preferences', { limit: 5 });
+
+for (const result of results) {
+  console.log(`[${result.score.toFixed(3)}] ${result.text.slice(0, 80)}...`);
+}
+```
+
+## Score Normalization
+
+Turbopuffer returns distance values. The handshake converts to similarity:
+
+```
+score = 1 - distance
+```

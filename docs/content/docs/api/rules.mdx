@@ -1,0 +1,118 @@
+---
+title: "RecursiveRules"
+description: "Customizing the recursive chunking hierarchy"
+---
+
+## RecursiveRules
+
+Defines the hierarchy of splitting rules for the `RecursiveChunker`.
+
+### Default Rules
+
+When no custom rules are provided, the default hierarchy is:
+
+1. Paragraphs (`\n\n`, `\r\n`, `\n`, `\r`)
+2. Sentences (`. `, `! `, `? `)
+3. Punctuation (`{`, `}`, `(`, `)`, `,`, etc.)
+4. Words (whitespace)
+5. Characters (token-level fallback)
+
+### Constructor
+
+```typescript
+import { RecursiveRules } from '@chonkiejs/core';
+
+// Use default rules
+const defaultRules = new RecursiveRules();
+
+// Custom rules
+const customRules = new RecursiveRules({
+  levels: [
+    { delimiters: ['\n\n'] },    // Paragraphs only
+    { whitespace: true },         // Words
+    {}                            // Characters (fallback)
+  ]
+});
+```
+
+### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `levels` | `RecursiveLevel[]` | Array of chunking levels |
+| `length` | `number` | Number of levels |
+
+### Methods
+
+#### `getLevel(index: number): RecursiveLevel | undefined`
+
+```typescript
+const firstLevel = rules.getLevel(0);
+```
+
+## RecursiveLevel
+
+Represents one level in the recursive chunking hierarchy.
+
+### Constructor
+
+```typescript
+import { RecursiveLevel } from '@chonkiejs/core';
+
+// Split on newlines
+const paragraphLevel = new RecursiveLevel({
+  delimiters: ['\n\n', '\n']
+});
+
+// Split on sentence endings, keep delimiter with previous chunk
+const sentenceLevel = new RecursiveLevel({
+  delimiters: ['. ', '! ', '? '],
+  includeDelim: 'prev'
+});
+
+// Split on whitespace
+const wordLevel = new RecursiveLevel({
+  whitespace: true
+});
+
+// Token level (no splitting, final fallback)
+const tokenLevel = new RecursiveLevel();
+```
+
+### Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `delimiters` | `string \| string[]` | `undefined` | Delimiters to split on |
+| `whitespace` | `boolean` | `false` | Use whitespace as delimiter |
+| `includeDelim` | `'prev' \| 'next' \| 'none'` | `'prev'` | Where to include delimiter |
+
+## Examples
+
+### Code-optimized Rules
+
+```typescript
+const codeRules = new RecursiveRules({
+  levels: [
+    { delimiters: ['\n\n'] },           // Blank lines
+    { delimiters: ['\n'] },             // Single lines
+    { delimiters: [';', '{', '}'] },    // Statements
+    { whitespace: true },                // Words
+    {}                                   // Characters
+  ]
+});
+```
+
+### Markdown-optimized Rules
+
+```typescript
+const markdownRules = new RecursiveRules({
+  levels: [
+    { delimiters: ['\n## ', '\n# '] },  // Headings
+    { delimiters: ['\n\n'] },            // Paragraphs
+    { delimiters: ['. ', '! ', '? '] },  // Sentences
+    { whitespace: true },                 // Words
+    {}                                    // Characters
+  ]
+});
+```

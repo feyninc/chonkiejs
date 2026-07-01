@@ -1,0 +1,63 @@
+---
+title: "Quick Start"
+description: "Get started with ChonkieJS in minutes"
+---
+
+## Install
+
+```bash
+npm install @chonkiejs/core
+```
+
+## Basic Usage
+
+```typescript
+import { RecursiveChunker } from '@chonkiejs/core';
+
+const chunker = new RecursiveChunker({ chunkSize: 512 });
+const chunks = await chunker.chunk('Your long document text...');
+
+for (const chunk of chunks) {
+  console.log(`[${chunk.startIndex}-${chunk.endIndex}]: ${chunk.text}`);
+  console.log(`Tokens: ${chunk.tokenCount}`);
+}
+```
+
+## Available Chunkers
+
+```typescript
+import {
+  RecursiveChunker,
+  TokenChunker,
+  SentenceChunker,
+  SemanticChunker,
+  CodeChunker,
+  TableChunker,
+  FastChunker
+} from '@chonkiejs/core';
+```
+
+Each chunker shares the same interface:
+
+```typescript
+const chunks = await chunker.chunk(text);        // Single text
+const batch = await chunker.chunkBatch(texts);   // Multiple texts
+```
+
+## Chunk Output
+
+Every chunker returns `Chunk[]` with consistent properties:
+
+```typescript
+interface Chunk {
+  text: string;       // The chunk content
+  startIndex: number; // Position in original text
+  endIndex: number;   // End position in original text
+  tokenCount: number; // Token count of the chunk
+}
+```
+
+## Next Steps
+
+- Learn about each chunker in the [Chunkers](/chunkers/overview) section
+- See the full [API Reference](/api/overview) for detailed type information

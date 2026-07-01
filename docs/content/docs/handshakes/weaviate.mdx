@@ -1,0 +1,60 @@
+---
+title: "WeaviateHandshake"
+description: "Store and search chunks with Weaviate"
+---
+
+The `WeaviateHandshake` connects ChonkieJS to [Weaviate](https://weaviate.io/), an AI-native vector database with built-in vectorization and hybrid search.
+
+## Installation
+
+```bash
+npm install @chonkiejs/core weaviate-client
+```
+
+## Initialization
+
+```typescript
+import { WeaviateHandshake } from '@chonkiejs/core';
+import weaviate from 'weaviate-client';
+
+const client = await weaviate.connectToLocal();
+const collection = client.collections.get('MyDocs');
+
+const handshake = new WeaviateHandshake({
+  collection,
+  embeddings: async (texts) => embedModel.encode(texts),
+});
+```
+
+## Parameters
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `collection` | `WeaviateCollection` | — | Pre-initialized Weaviate collection |
+| `embeddings` | `EmbedFunction \| EmbeddingModel` | — | Embedding function or model |
+| `idPrefix` | `string` | `''` | Prefix for generated chunk IDs |
+
+## Usage
+
+```typescript
+import { RecursiveChunker, WeaviateHandshake } from '@chonkiejs/core';
+
+const chunker = new RecursiveChunker({ chunkSize: 512 });
+const chunks = await chunker.chunk(document);
+
+await handshake.write(chunks);
+
+const results = await handshake.search('data processing pipeline', { limit: 5 });
+
+for (const result of results) {
+  console.log(`[${result.score.toFixed(3)}] ${result.text.slice(0, 80)}...`);
+}
+```
+
+## Score Normalization
+
+Weaviate returns distance values. The handshake converts to similarity:
+
+```
+score = 1 - distance
+```

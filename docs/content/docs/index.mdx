@@ -1,0 +1,45 @@
+---
+title: "ChonkieJS"
+description: "The lightweight JavaScript chunking library for RAG pipelines"
+---
+
+ChonkieJS is the JavaScript/TypeScript implementation of [Chonkie](https://github.com/chonkie-inc/chonkie) — bringing fast, efficient text chunking to the JavaScript ecosystem.
+
+## Features
+
+<Cards>
+  <Card title="Zero Dependencies">
+    @chonkiejs/core has no runtime dependencies — lightweight and fast.
+  </Card>
+  <Card title="Multiple Chunkers">
+    Token, Recursive, Sentence, Semantic, Code, Table, and Fast chunkers included.
+  </Card>
+  <Card title="TypeScript Native">
+    Full TypeScript type definitions with ESM-first design.
+  </Card>
+  <Card title="Async API">
+    All chunkers support async/await for non-blocking pipelines.
+  </Card>
+</Cards>
+
+## Packages
+
+| Package | Description |
+|---------|-------------|
+| `@chonkiejs/core` | Core chunking library with all chunkers |
+| `@chonkiejs/token` | HuggingFace tokenizer support |
+| `@chonkiejs/cloud` | Cloud API-based chunking |
+
+## Quick Example
+
+```typescript
+import { RecursiveChunker } from '@chonkiejs/core';
+
+const chunker = new RecursiveChunker({ chunkSize: 512 });
+const chunks = await chunker.chunk('Your long document text...');
+
+for (const chunk of chunks) {
+  console.log(chunk.text);
+  console.log(`Tokens: ${chunk.tokenCount}`);
+}
+```

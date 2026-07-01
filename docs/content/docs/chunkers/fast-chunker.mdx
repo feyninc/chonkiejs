@@ -1,0 +1,69 @@
+---
+title: "FastChunker"
+description: "High-performance byte-based chunking"
+---
+
+The `FastChunker` provides high-performance byte-based chunking powered by `@chonkiejs/chunk`. Use it when you need delimiter/pattern boundary chunking with minimal overhead and don't need token-based limits.
+
+## Installation
+
+```bash
+npm install @chonkiejs/core
+```
+
+## Initialization
+
+```typescript
+import { FastChunker } from '@chonkiejs/core';
+
+const chunker = await FastChunker.create({
+  chunkSize: 4096,
+  delimiters: '\n.?',
+  prefix: false,
+  consecutive: false,
+  forwardFallback: false
+});
+```
+
+## Parameters
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `chunkSize` | `number` | `4096` | Target chunk size in bytes |
+| `delimiters` | `string` | `"\n.?"` | Delimiter characters for boundary search |
+| `pattern` | `string \| Uint8Array` | `undefined` | Multi-byte pattern to split on (overrides delimiters) |
+| `prefix` | `boolean` | `false` | Put delimiter at start of next chunk instead of end of current |
+| `consecutive` | `boolean` | `false` | Split at start of consecutive delimiter runs |
+| `forwardFallback` | `boolean` | `false` | Search forward when no boundary found in backward window |
+
+## Usage
+
+```typescript
+import { FastChunker } from '@chonkiejs/core';
+
+const chunker = await FastChunker.create({
+  chunkSize: 4096,
+  delimiters: '\n.?'
+});
+
+const text = "First sentence. Second sentence. Third sentence.";
+const chunks = chunker.chunk(text);
+
+for (const chunk of chunks) {
+  console.log(chunk.text);
+  console.log(`Position: ${chunk.startIndex}-${chunk.endIndex}`);
+}
+```
+
+<Callout type="info">
+`FastChunker` always sets `tokenCount` to 0 on output chunks since it operates on bytes, not tokens.
+</Callout>
+
+## Batch Processing
+
+```typescript
+const batch = chunker.chunkBatch([
+  'Document one...',
+  'Document two...',
+]);
+```

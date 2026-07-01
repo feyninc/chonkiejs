@@ -1,0 +1,59 @@
+---
+title: "MongoDBHandshake"
+description: "Store and search chunks with MongoDB Atlas Vector Search"
+---
+
+The `MongoDBHandshake` connects ChonkieJS to [MongoDB Atlas Vector Search](https://www.mongodb.com/products/platform/atlas-vector-search), enabling similarity search on chunks stored in MongoDB collections.
+
+## Installation
+
+```bash
+npm install @chonkiejs/core mongodb
+```
+
+## Initialization
+
+```typescript
+import { MongoDBHandshake } from '@chonkiejs/core';
+import { MongoClient } from 'mongodb';
+
+const client = new MongoClient(process.env.MONGODB_URI);
+await client.connect();
+const collection = client.db('mydb').collection('chunks');
+
+const handshake = new MongoDBHandshake({
+  collection,
+  indexName: 'vector_index',
+  embeddings: async (texts) => embedModel.encode(texts),
+});
+```
+
+## Parameters
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `collection` | `MongoCollection` | — | MongoDB collection instance |
+| `indexName` | `string` | `'default'` | Atlas Vector Search index name |
+| `embeddings` | `EmbedFunction \| EmbeddingModel` | — | Embedding function or model |
+| `idPrefix` | `string` | `''` | Prefix for generated chunk IDs |
+
+## Usage
+
+```typescript
+import { RecursiveChunker, MongoDBHandshake } from '@chonkiejs/core';
+
+const chunker = new RecursiveChunker({ chunkSize: 512 });
+const chunks = await chunker.chunk(document);
+
+await handshake.write(chunks);
+
+const results = await handshake.search('billing questions', { limit: 5 });
+
+for (const result of results) {
+  console.log(`[${result.score.toFixed(3)}] ${result.text.slice(0, 80)}...`);
+}
+```
+
+<Callout type="info">
+You must create an Atlas Vector Search index on the `embedding` field before searching. See the [Atlas documentation](https://www.mongodb.com/docs/atlas/atlas-vector-search/create-index/) for setup instructions.
+</Callout>

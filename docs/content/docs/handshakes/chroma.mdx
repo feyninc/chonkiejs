@@ -1,0 +1,73 @@
+---
+title: "ChromaHandshake"
+description: "Store and search chunks with ChromaDB"
+---
+
+The `ChromaHandshake` connects ChonkieJS to [ChromaDB](https://www.trychroma.com/), an open-source embedding database that runs in-memory or with persistent storage.
+
+## Installation
+
+```bash
+npm install @chonkiejs/core chromadb
+```
+
+## Initialization
+
+```typescript
+import { ChromaHandshake } from '@chonkiejs/core';
+import { ChromaClient } from 'chromadb';
+
+const client = new ChromaClient();
+const collection = await client.getOrCreateCollection({
+  name: 'my-docs',
+  metadata: { 'hnsw:space': 'cosine' },
+});
+
+const handshake = new ChromaHandshake({
+  collection,
+  embeddings: async (texts) => embedModel.encode(texts),
+});
+```
+
+## Parameters
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `collection` | `ChromaCollection` | — | Pre-initialized ChromaDB collection (must use cosine distance) |
+| `embeddings` | `EmbedFunction \| EmbeddingModel` | — | Embedding function or model |
+| `idPrefix` | `string` | `''` | Prefix for generated chunk IDs |
+
+## Usage
+
+```typescript
+import { RecursiveChunker, ChromaHandshake } from '@chonkiejs/core';
+
+const chunker = new RecursiveChunker({ chunkSize: 512 });
+const chunks = await chunker.chunk(document);
+
+// Store chunks
+await handshake.write(chunks);
+
+// Search
+const results = await handshake.search('how do I reset my password?', {
+  limit: 5,
+});
+
+for (const result of results) {
+  console.log(`[${result.score.toFixed(3)}] ${result.text.slice(0, 80)}...`);
+}
+```
+
+## Score Normalization
+
+ChromaDB returns cosine **distance** (lower = more similar). The handshake converts this to a similarity score:
+
+```
+score = 1 - distance
+```
+
+A score of `1.0` means identical, `0.0` means orthogonal.
+
+<Callout type="info">
+Make sure your collection uses cosine distance (`hnsw:space = "cosine"`) for scores to be meaningful.
+</Callout>

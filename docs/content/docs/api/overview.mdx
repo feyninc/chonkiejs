@@ -1,0 +1,62 @@
+---
+title: "API Overview"
+description: "Complete API reference for @chonkiejs/core"
+---
+
+## Exports
+
+```typescript
+import {
+  // Chunkers
+  RecursiveChunker,
+  TokenChunker,
+  SentenceChunker,
+  SemanticChunker,
+  CodeChunker,
+  TableChunker,
+  FastChunker,
+
+  // Utilities
+  Chunk,
+  Tokenizer,
+  RecursiveRules,
+  RecursiveLevel,
+} from '@chonkiejs/core';
+```
+
+## Type Exports
+
+```typescript
+import type {
+  RecursiveChunkerOptions,
+  FastChunkerOptions,
+  RecursiveLevelConfig,
+  RecursiveRulesConfig,
+  IncludeDelim,
+} from '@chonkiejs/core';
+```
+
+## Common Patterns
+
+### All chunkers share these methods:
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `chunk` | `(text: string) => Promise<Chunk[]>` | Chunk a single text |
+| `chunkBatch` | `(texts: string[]) => Promise<Chunk[][]>` | Chunk multiple texts |
+
+### Factory pattern (async creation):
+
+Some chunkers require async initialization:
+
+```typescript
+// TokenChunker, SentenceChunker, SemanticChunker, CodeChunker, TableChunker, FastChunker
+const chunker = await SomeChunker.create(options);
+```
+
+### Direct instantiation:
+
+```typescript
+// RecursiveChunker
+const chunker = new RecursiveChunker(options);
+```

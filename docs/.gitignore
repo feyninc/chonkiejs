@@ -1,0 +1,17 @@
+# Next.js build output
+.next
+out
+
+# Fumadocs generated
+.source/
+
+# Next.js generated
+next-env.d.ts
+
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+.env.*
+!.env.example

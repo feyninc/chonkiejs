@@ -1,0 +1,60 @@
+---
+title: "LanceDBHandshake"
+description: "Store and search chunks with LanceDB"
+---
+
+The `LanceDBHandshake` connects ChonkieJS to [LanceDB](https://lancedb.com/), a serverless columnar vector database with zero infrastructure overhead.
+
+## Installation
+
+```bash
+npm install @chonkiejs/core @lancedb/lancedb
+```
+
+## Initialization
+
+```typescript
+import { LanceDBHandshake } from '@chonkiejs/core';
+import * as lancedb from '@lancedb/lancedb';
+
+const db = await lancedb.connect('data/my-db');
+const table = await db.openTable('chunks');
+
+const handshake = new LanceDBHandshake({
+  table,
+  embeddings: async (texts) => embedModel.encode(texts),
+});
+```
+
+## Parameters
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `table` | `LanceTable` | — | Pre-initialized LanceDB table |
+| `embeddings` | `EmbedFunction \| EmbeddingModel` | — | Embedding function or model |
+| `idPrefix` | `string` | `''` | Prefix for generated chunk IDs |
+
+## Usage
+
+```typescript
+import { RecursiveChunker, LanceDBHandshake } from '@chonkiejs/core';
+
+const chunker = new RecursiveChunker({ chunkSize: 512 });
+const chunks = await chunker.chunk(document);
+
+await handshake.write(chunks);
+
+const results = await handshake.search('deployment configuration', { limit: 5 });
+
+for (const result of results) {
+  console.log(`[${result.score.toFixed(3)}] ${result.text.slice(0, 80)}...`);
+}
+```
+
+## Score Normalization
+
+LanceDB returns Euclidean distance by default. The handshake converts to similarity:
+
+```
+score = 1 / (1 + distance)
+```

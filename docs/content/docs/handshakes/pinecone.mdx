@@ -1,0 +1,80 @@
+---
+title: "PineconeHandshake"
+description: "Store and search chunks with Pinecone"
+---
+
+The `PineconeHandshake` connects ChonkieJS to [Pinecone](https://www.pinecone.io/), a fully managed cloud vector database.
+
+## Installation
+
+```bash
+npm install @chonkiejs/core @pinecone-database/pinecone
+```
+
+## Initialization
+
+```typescript
+import { PineconeHandshake } from '@chonkiejs/core';
+import { Pinecone } from '@pinecone-database/pinecone';
+
+const pc = new Pinecone({ apiKey: process.env.PINECONE_API_KEY });
+const index = pc.index('my-index');
+
+const handshake = new PineconeHandshake({
+  index,
+  namespace: 'documents',
+  embeddings: async (texts) => embedModel.encode(texts),
+});
+```
+
+## Parameters
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `index` | `PineconeIndex` | — | Pre-initialized Pinecone index instance |
+| `namespace` | `string` | `''` | Namespace within the index |
+| `embeddings` | `EmbedFunction \| EmbeddingModel` | — | Embedding function or model |
+| `idPrefix` | `string` | `''` | Prefix for generated chunk IDs |
+
+## Usage
+
+```typescript
+import { RecursiveChunker, PineconeHandshake } from '@chonkiejs/core';
+
+const chunker = new RecursiveChunker({ chunkSize: 512 });
+const chunks = await chunker.chunk(document);
+
+// Store chunks (batched in groups of 100 automatically)
+await handshake.write(chunks);
+
+// Search
+const results = await handshake.search('quarterly revenue', { limit: 5 });
+
+for (const result of results) {
+  console.log(`[${result.score.toFixed(3)}] ${result.text.slice(0, 80)}...`);
+}
+```
+
+## Batch Writes
+
+Pinecone has a 100-vector upsert limit per request. The handshake handles batching internally — you can pass thousands of chunks to `write()` without worrying about limits.
+
+## Namespaces
+
+Use namespaces to partition data within a single index:
+
+```typescript
+const docsHandshake = new PineconeHandshake({
+  index,
+  namespace: 'docs',
+  embeddings: embed,
+});
+
+const faqHandshake = new PineconeHandshake({
+  index,
+  namespace: 'faq',
+  embeddings: embed,
+});
+```
+
+The `count()` method returns the record count for the configured namespace (or the total index count if no namespace is set).

@@ -1,0 +1,62 @@
+---
+title: "Chunkers Overview"
+description: "Available chunkers in ChonkieJS"
+---
+
+ChonkieJS provides multiple chunking strategies for different text processing needs. All chunkers share a consistent async interface.
+
+<Callout type="info">
+  Not sure which chunker to use? Check out the [Choosing a Chunker](/chunkers/choosing-a-chunker) guide for recommendations based on your use case.
+</Callout>
+
+## Available Chunkers
+
+<Cards>
+  <Card title="RecursiveChunker" href="/chunkers/recursive-chunker">
+    Splits text hierarchically using customizable rules. Best for general-purpose chunking.
+  </Card>
+  <Card title="TokenChunker" href="/chunkers/token-chunker">
+    Fixed-size token-based chunking. Best for consistent chunk sizes.
+  </Card>
+  <Card title="SentenceChunker" href="/chunkers/sentence-chunker">
+    Splits at sentence boundaries. Preserves semantic completeness.
+  </Card>
+  <Card title="SemanticChunker" href="/chunkers/semantic-chunker">
+    Groups content by semantic similarity using custom embeddings.
+  </Card>
+  <Card title="CodeChunker" href="/chunkers/code-chunker">
+    AST-aware chunking for source code files.
+  </Card>
+  <Card title="TableChunker" href="/chunkers/table-chunker">
+    Chunks markdown/HTML tables by row or token count.
+  </Card>
+  <Card title="FastChunker" href="/chunkers/fast-chunker">
+    High-performance byte-based chunking with SIMD acceleration.
+  </Card>
+</Cards>
+
+## Common Interface
+
+All chunkers share these methods:
+
+```typescript
+// Chunk a single text
+const chunks = await chunker.chunk(text);
+
+// Chunk multiple texts
+const batchResults = await chunker.chunkBatch(texts);
+```
+
+## Chunk Output
+
+Every chunker returns `Chunk[]`:
+
+```typescript
+import { Chunk } from '@chonkiejs/core';
+
+// Each chunk has:
+chunk.text        // The chunk content
+chunk.startIndex  // Start position in original text
+chunk.endIndex    // End position in original text
+chunk.tokenCount  // Token count
+```

@@ -1,0 +1,57 @@
+---
+title: "QdrantHandshake"
+description: "Store and search chunks with Qdrant"
+---
+
+The `QdrantHandshake` connects ChonkieJS to [Qdrant](https://qdrant.tech/), an open-source vector search engine with filtering and payload support.
+
+## Installation
+
+```bash
+npm install @chonkiejs/core @qdrant/js-client-rest
+```
+
+## Initialization
+
+```typescript
+import { QdrantHandshake } from '@chonkiejs/core';
+import { QdrantClient } from '@qdrant/js-client-rest';
+
+const client = new QdrantClient({ url: 'http://localhost:6333' });
+
+const handshake = new QdrantHandshake({
+  client,
+  collectionName: 'my-docs',
+  embeddings: async (texts) => embedModel.encode(texts),
+});
+```
+
+## Parameters
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `client` | `QdrantClient` | — | Pre-initialized Qdrant client |
+| `collectionName` | `string` | — | Name of the Qdrant collection |
+| `embeddings` | `EmbedFunction \| EmbeddingModel` | — | Embedding function or model |
+| `idPrefix` | `string` | `''` | Prefix for generated chunk IDs |
+
+## Usage
+
+```typescript
+import { RecursiveChunker, QdrantHandshake } from '@chonkiejs/core';
+
+const chunker = new RecursiveChunker({ chunkSize: 512 });
+const chunks = await chunker.chunk(document);
+
+await handshake.write(chunks);
+
+const results = await handshake.search('authentication flow', { limit: 5 });
+
+for (const result of results) {
+  console.log(`[${result.score.toFixed(3)}] ${result.text.slice(0, 80)}...`);
+}
+```
+
+<Callout type="info">
+Make sure the Qdrant collection is created with cosine distance before using the handshake. The collection's vector dimension must match your embedding model's output.
+</Callout>

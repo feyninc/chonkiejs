@@ -1,0 +1,57 @@
+---
+title: "ElasticHandshake"
+description: "Store and search chunks with Elasticsearch"
+---
+
+The `ElasticHandshake` connects ChonkieJS to [Elasticsearch](https://www.elastic.co/elasticsearch), leveraging its dense vector field type for similarity search.
+
+## Installation
+
+```bash
+npm install @chonkiejs/core @elastic/elasticsearch
+```
+
+## Initialization
+
+```typescript
+import { ElasticHandshake } from '@chonkiejs/core';
+import { Client } from '@elastic/elasticsearch';
+
+const client = new Client({ node: 'http://localhost:9200' });
+
+const handshake = new ElasticHandshake({
+  client,
+  indexName: 'my-docs',
+  embeddings: async (texts) => embedModel.encode(texts),
+});
+```
+
+## Parameters
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `client` | `ElasticClient` | — | Elasticsearch client instance |
+| `indexName` | `string` | — | Name of the Elasticsearch index |
+| `embeddings` | `EmbedFunction \| EmbeddingModel` | — | Embedding function or model |
+| `idPrefix` | `string` | `''` | Prefix for generated chunk IDs |
+
+## Usage
+
+```typescript
+import { RecursiveChunker, ElasticHandshake } from '@chonkiejs/core';
+
+const chunker = new RecursiveChunker({ chunkSize: 512 });
+const chunks = await chunker.chunk(document);
+
+await handshake.write(chunks);
+
+const results = await handshake.search('error handling patterns', { limit: 5 });
+
+for (const result of results) {
+  console.log(`[${result.score.toFixed(3)}] ${result.text.slice(0, 80)}...`);
+}
+```
+
+<Callout type="info">
+Create your index with a `dense_vector` field mapping before writing. Set `similarity: "cosine"` for normalized scores.
+</Callout>

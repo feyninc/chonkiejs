@@ -1,0 +1,93 @@
+---
+title: "RecursiveChunker"
+description: "Hierarchical text chunking with customizable rules"
+---
+
+The `RecursiveChunker` splits text hierarchically using customizable rules. It's the most versatile chunker and works well for general-purpose text processing.
+
+## How It Works
+
+The chunker splits text through multiple levels:
+
+1. **Paragraphs** — Split on `\n\n`, `\r\n`, `\n`, `\r`
+2. **Sentences** — Split on `. `, `! `, `? `
+3. **Punctuation** — Split on `{`, `}`, `(`, `)`, `,`, etc.
+4. **Words** — Split on whitespace
+5. **Characters** — Token-level splitting (final fallback)
+
+Each level only activates if chunks from the previous level exceed `chunkSize`.
+
+## Installation
+
+```bash
+npm install @chonkiejs/core
+```
+
+## Initialization
+
+```typescript
+import { RecursiveChunker } from '@chonkiejs/core';
+
+const chunker = new RecursiveChunker({
+  chunkSize: 512,
+  minCharactersPerChunk: 24
+});
+```
+
+## Parameters
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `chunkSize` | `number` | `512` | Maximum tokens per chunk |
+| `minCharactersPerChunk` | `number` | `24` | Minimum characters when merging small splits |
+| `rules` | `RecursiveRules` | Default rules | Custom chunking hierarchy |
+| `tokenizer` | `Tokenizer` | Character tokenizer | Custom tokenizer instance |
+
+## Usage
+
+```typescript
+import { RecursiveChunker } from '@chonkiejs/core';
+
+const chunker = new RecursiveChunker({ chunkSize: 512 });
+const chunks = await chunker.chunk('Your long document text...');
+
+for (const chunk of chunks) {
+  console.log(chunk.text);
+  console.log(`Position: ${chunk.startIndex}-${chunk.endIndex}`);
+  console.log(`Tokens: ${chunk.tokenCount}`);
+}
+```
+
+## Custom Rules
+
+```typescript
+import { RecursiveChunker, RecursiveRules } from '@chonkiejs/core';
+
+const codeRules = new RecursiveRules({
+  levels: [
+    { delimiters: ['\n\n'] },           // Blank lines (blocks)
+    { delimiters: ['\n'] },             // Single lines
+    { delimiters: [';', '{', '}'] },    // Statements
+    { whitespace: true },                // Words
+    {}                                   // Characters
+  ]
+});
+
+const chunker = new RecursiveChunker({
+  chunkSize: 512,
+  rules: codeRules
+});
+
+const chunks = await chunker.chunk(codeString);
+```
+
+## Batch Processing
+
+```typescript
+const texts = ['Document one...', 'Document two...'];
+const batchResults = await chunker.chunkBatch(texts);
+
+for (const [i, chunks] of batchResults.entries()) {
+  console.log(`Document ${i + 1}: ${chunks.length} chunks`);
+}
+```

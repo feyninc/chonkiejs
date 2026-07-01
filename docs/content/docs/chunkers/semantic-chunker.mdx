@@ -1,0 +1,94 @@
+---
+title: "SemanticChunker"
+description: "Group content by semantic similarity"
+---
+
+The `SemanticChunker` groups text by semantic similarity using a custom embedding function. It keeps related content together in the same chunk.
+
+## Installation
+
+```bash
+npm install @chonkiejs/core
+```
+
+## Initialization
+
+```typescript
+import { SemanticChunker } from '@chonkiejs/core';
+
+const embedFn = async (texts: string[]) => {
+  // Your embedding logic here - return array of embeddings
+  // Each embedding should be a number[]
+};
+
+const chunker = await SemanticChunker.create({
+  embedFunction: embedFn,
+  threshold: 0.8,
+  chunkSize: 2048,
+  similarityWindow: 3,
+  skipWindow: 0
+});
+```
+
+## Parameters
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `embedFunction` | `(texts: string[]) => Promise<number[][]>` | required | Custom embedding function |
+| `threshold` | `number` | `0.8` | Similarity threshold (0-1). Lower = larger chunks |
+| `chunkSize` | `number` | `2048` | Maximum tokens per chunk |
+| `similarityWindow` | `number` | `3` | Window for similarity calculation |
+| `skipWindow` | `number` | `0` | Skip-and-merge window (0=disabled) |
+
+## Usage
+
+```typescript
+import { SemanticChunker } from '@chonkiejs/core';
+
+const embedFn = async (texts: string[]) => {
+  // Call your embedding API here
+  // e.g., OpenAI, Cohere, local model, etc.
+  return texts.map(t => /* embedding vector */);
+};
+
+const chunker = await SemanticChunker.create({
+  embedFunction: embedFn,
+  threshold: 0.7,
+  chunkSize: 512
+});
+
+const text = "Your document text with multiple topics and themes...";
+const chunks = await chunker.chunk(text);
+
+for (const chunk of chunks) {
+  console.log(`Chunk: ${chunk.text.slice(0, 50)}...`);
+  console.log(`Tokens: ${chunk.tokenCount}`);
+}
+```
+
+<Callout type="info">
+The `embedFunction` must accept an array of strings and return a Promise resolving to an array of number arrays (embeddings). Each embedding vector should have the same dimensionality.
+</Callout>
+
+## With OpenAI Embeddings
+
+```typescript
+import { SemanticChunker } from '@chonkiejs/core';
+import OpenAI from 'openai';
+
+const openai = new OpenAI();
+
+const embedFn = async (texts: string[]) => {
+  const response = await openai.embeddings.create({
+    model: 'text-embedding-3-small',
+    input: texts,
+  });
+  return response.data.map(d => d.embedding);
+};
+
+const chunker = await SemanticChunker.create({
+  embedFunction: embedFn,
+  threshold: 0.75,
+  chunkSize: 1024
+});
+```

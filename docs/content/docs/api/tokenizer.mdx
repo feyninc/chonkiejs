@@ -1,0 +1,76 @@
+---
+title: "Tokenizer"
+description: "Tokenizer interface and implementations"
+---
+
+## Character Tokenizer
+
+The default tokenizer where 1 character = 1 token. Zero dependencies.
+
+```typescript
+import { Tokenizer } from '@chonkiejs/core';
+
+const tokenizer = new Tokenizer();
+```
+
+### Methods
+
+#### `countTokens(text: string): number`
+
+```typescript
+const count = tokenizer.countTokens('Hello'); // Returns 5
+```
+
+#### `encode(text: string): number[]`
+
+```typescript
+const tokens = tokenizer.encode('Hi'); // Returns [72, 105]
+```
+
+#### `decode(tokens: number[]): string`
+
+```typescript
+const text = tokenizer.decode([72, 105]); // Returns 'Hi'
+```
+
+#### `decodeBatch(tokensBatch: number[][]): string[]`
+
+```typescript
+const texts = tokenizer.decodeBatch([[72, 105], [66, 121, 101]]);
+// Returns ['Hi', 'Bye']
+```
+
+## HuggingFace Tokenizer
+
+For real token counting, install `@chonkiejs/token`:
+
+```bash
+npm install @chonkiejs/token
+```
+
+```typescript
+import { HuggingFaceTokenizer } from '@chonkiejs/token';
+
+const tokenizer = await HuggingFaceTokenizer.create('gpt2');
+const count = tokenizer.countTokens('Hello, world!'); // Real GPT-2 token count
+```
+
+## Using Tokenizers with Chunkers
+
+Pass a tokenizer name when creating chunkers:
+
+```typescript
+import { TokenChunker } from '@chonkiejs/core';
+
+// Character tokenizer (default, fast, zero deps)
+const charChunker = await TokenChunker.create({
+  tokenizer: 'character',
+  chunkSize: 512
+});
+
+// GPT-2 tokenizer (requires @chonkiejs/token)
+const gptChunker = await TokenChunker.create({
+  tokenizer: 'gpt2',
+  chunkSize: 512
+});
+```

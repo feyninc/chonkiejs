@@ -1,0 +1,57 @@
+---
+title: "MilvusHandshake"
+description: "Store and search chunks with Milvus"
+---
+
+The `MilvusHandshake` connects ChonkieJS to [Milvus](https://milvus.io/), a scalable open-source vector database built for billion-scale similarity search.
+
+## Installation
+
+```bash
+npm install @chonkiejs/core @zilliz/milvus2-sdk-node
+```
+
+## Initialization
+
+```typescript
+import { MilvusHandshake } from '@chonkiejs/core';
+import { MilvusClient } from '@zilliz/milvus2-sdk-node';
+
+const client = new MilvusClient({ address: 'localhost:19530' });
+
+const handshake = new MilvusHandshake({
+  client,
+  collectionName: 'my_docs',
+  embeddings: async (texts) => embedModel.encode(texts),
+});
+```
+
+## Parameters
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `client` | `MilvusClient` | — | Pre-initialized Milvus client |
+| `collectionName` | `string` | — | Name of the Milvus collection |
+| `embeddings` | `EmbedFunction \| EmbeddingModel` | — | Embedding function or model |
+| `idPrefix` | `string` | `''` | Prefix for generated chunk IDs |
+
+## Usage
+
+```typescript
+import { RecursiveChunker, MilvusHandshake } from '@chonkiejs/core';
+
+const chunker = new RecursiveChunker({ chunkSize: 512 });
+const chunks = await chunker.chunk(document);
+
+await handshake.write(chunks);
+
+const results = await handshake.search('machine learning models', { limit: 5 });
+
+for (const result of results) {
+  console.log(`[${result.score.toFixed(3)}] ${result.text.slice(0, 80)}...`);
+}
+```
+
+<Callout type="info">
+Ensure your Milvus collection schema includes a vector field with the correct dimension for your embedding model.
+</Callout>

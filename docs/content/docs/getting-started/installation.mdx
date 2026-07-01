@@ -1,0 +1,96 @@
+---
+title: "Installation"
+description: "Installing ChonkieJS packages"
+---
+
+ChonkieJS is distributed as multiple packages on npm. Install only what you need.
+
+## Core Package
+
+The core package includes all chunkers with zero runtime dependencies.
+
+<Tabs items={["npm", "pnpm", "bun", "yarn"]}>
+<Tab value="npm">
+```bash
+npm install @chonkiejs/core
+```
+</Tab>
+<Tab value="pnpm">
+```bash
+pnpm add @chonkiejs/core
+```
+</Tab>
+<Tab value="bun">
+```bash
+bun add @chonkiejs/core
+```
+</Tab>
+<Tab value="yarn">
+```bash
+yarn add @chonkiejs/core
+```
+</Tab>
+</Tabs>
+
+## Token Package
+
+For HuggingFace tokenizer support (real token counting instead of character-based):
+
+<Tabs items={["npm", "pnpm", "bun", "yarn"]}>
+<Tab value="npm">
+```bash
+npm install @chonkiejs/token
+```
+</Tab>
+<Tab value="pnpm">
+```bash
+pnpm add @chonkiejs/token
+```
+</Tab>
+<Tab value="bun">
+```bash
+bun add @chonkiejs/token
+```
+</Tab>
+<Tab value="yarn">
+```bash
+yarn add @chonkiejs/token
+```
+</Tab>
+</Tabs>
+
+## Cloud Package
+
+For API-based chunking via the Chonkie cloud service:
+
+<Tabs items={["npm", "pnpm", "bun", "yarn"]}>
+<Tab value="npm">
+```bash
+npm install @chonkiejs/cloud
+```
+</Tab>
+<Tab value="pnpm">
+```bash
+pnpm add @chonkiejs/cloud
+```
+</Tab>
+<Tab value="bun">
+```bash
+bun add @chonkiejs/cloud
+```
+</Tab>
+<Tab value="yarn">
+```bash
+yarn add @chonkiejs/cloud
+```
+</Tab>
+</Tabs>
+
+## Requirements
+
+- Node.js 18+ (ESM support required)
+- TypeScript 5.0+ (recommended for type safety)
+
+<Callout type="info">
+ChonkieJS is ESM-first. Make sure your project has `"type": "module"` in `package.json` or use `.mjs` file extensions.
+</Callout>

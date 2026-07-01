@@ -1,0 +1,91 @@
+---
+title: "PgvectorHandshake"
+description: "Store and search chunks with PostgreSQL and pgvector"
+---
+
+The `PgvectorHandshake` connects ChonkieJS to PostgreSQL using the [pgvector](https://github.com/pgvector/pgvector) extension, letting you store and search embeddings alongside your relational data.
+
+## Installation
+
+```bash
+npm install @chonkiejs/core pg
+```
+
+Make sure the `pgvector` extension is installed on your PostgreSQL instance:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS vector;
+```
+
+## Initialization
+
+```typescript
+import { PgvectorHandshake } from '@chonkiejs/core';
+import { Pool } from 'pg';
+
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+
+const handshake = new PgvectorHandshake({
+  client: pool,
+  tableName: 'document_chunks',
+  embeddings: async (texts) => embedModel.encode(texts),
+});
+```
+
+## Parameters
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `client` | `PgClient` | — | A `pg` Pool or Client instance |
+| `tableName` | `string` | `'chunks'` | Table name for storing chunks |
+| `autoCreateTable` | `boolean` | `true` | Auto-create table on first write |
+| `embeddings` | `EmbedFunction \| EmbeddingModel` | — | Embedding function or model |
+| `idPrefix` | `string` | `''` | Prefix for generated chunk IDs |
+
+## Usage
+
+```typescript
+import { RecursiveChunker, PgvectorHandshake } from '@chonkiejs/core';
+
+const chunker = new RecursiveChunker({ chunkSize: 512 });
+const chunks = await chunker.chunk(document);
+
+await handshake.write(chunks);
+
+const results = await handshake.search('order tracking', { limit: 5 });
+
+for (const result of results) {
+  console.log(`[${result.score.toFixed(3)}] ${result.text.slice(0, 80)}...`);
+}
+```
+
+## Auto Table Creation
+
+By default, the handshake creates the table on the first `write()` call:
+
+```sql
+CREATE TABLE IF NOT EXISTS document_chunks (
+  id TEXT PRIMARY KEY,
+  text TEXT NOT NULL,
+  start_index INTEGER NOT NULL,
+  end_index INTEGER NOT NULL,
+  token_count INTEGER NOT NULL,
+  embedding vector(1536)  -- dimension inferred from first embedding
+)
+```
+
+Set `autoCreateTable: false` if you want to manage the schema yourself.
+
+## Upsert Behavior
+
+Writes use `ON CONFLICT ... DO UPDATE`, so writing the same chunk twice updates it in place rather than throwing a duplicate key error.
+
+## Score Computation
+
+Similarity is computed using cosine distance (`<=>` operator):
+
+```
+score = 1 - (embedding <=> query_vector)
+```
+
+Results are ordered by cosine distance ascending (most similar first).

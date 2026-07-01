@@ -1,0 +1,122 @@
+---
+title: "Choosing a Chunker"
+description: "A guide to help you pick the right chunking strategy for your use case"
+---
+
+Not sure which chunker to use? This guide helps you pick the right one based on your use case, performance needs, and content type.
+
+## Quick Recommendations
+
+<Cards>
+  <Card title="Building a RAG chatbot?" href="/chunkers/recursive-chunker">
+    Use **RecursiveChunker** for general-purpose document chunking, or **SemanticChunker** if you need high topical coherence.
+  </Card>
+  <Card title="Processing source code?" href="/chunkers/code-chunker">
+    Use **CodeChunker** — it understands AST structure and keeps functions/classes intact.
+  </Card>
+  <Card title="Need maximum throughput?" href="/chunkers/fast-chunker">
+    Use **FastChunker** — high-performance byte-based chunking with SIMD acceleration.
+  </Card>
+  <Card title="Working with tabular data?" href="/chunkers/table-chunker">
+    Use **TableChunker** — preserves headers and splits by rows.
+  </Card>
+</Cards>
+
+## Decision Guide
+
+Ask yourself these questions in order:
+
+1. **Are you chunking source code?** → Use [CodeChunker](/chunkers/code-chunker)
+2. **Are you chunking tables?** → Use [TableChunker](/chunkers/table-chunker)
+3. **Is raw throughput your top priority?** → Use [FastChunker](/chunkers/fast-chunker)
+4. **Do you need chunks grouped by topic?** → Use [SemanticChunker](/chunkers/semantic-chunker)
+5. **Are simple sentence-boundary splits enough?** → Use [SentenceChunker](/chunkers/sentence-chunker)
+6. **None of the above?** → Use [RecursiveChunker](/chunkers/recursive-chunker) (best default)
+
+## Comparison Table
+
+| Chunker | Speed | Quality | Dependencies | Best For |
+|---------|-------|---------|--------------|----------|
+| **FastChunker** | Fastest | Basic | None (SIMD) | High-throughput pipelines |
+| **TokenChunker** | Very fast | Good | Tokenizer | Fixed-size chunks, token-based models |
+| **SentenceChunker** | Fast | Good | Tokenizer | Clean sentence boundaries |
+| **RecursiveChunker** | Fast | Very good | Tokenizer | General-purpose, structured docs |
+| **TableChunker** | Fast | Excellent (tables) | None | Markdown/HTML tables |
+| **CodeChunker** | Moderate | Excellent (code) | Tree-sitter | Source code files |
+| **SemanticChunker** | Slower | Excellent | Embedding model | Topic-coherent chunks, RAG quality |
+
+## When to Use Each
+
+<Steps>
+  <Step>
+    ### You just need it to work
+
+    Start with **RecursiveChunker**. It's the best general-purpose option — fast, handles most document types well, and produces clean boundaries.
+
+    ```typescript
+    import { RecursiveChunker } from '@chonkiejs/core';
+
+    const chunker = new RecursiveChunker({ maxChunkSize: 512 });
+    const chunks = await chunker.chunk(text);
+    ```
+  </Step>
+
+  <Step>
+    ### You need high-quality semantic chunks
+
+    Use **SemanticChunker** with a custom embedding function. It groups sentences by meaning, so each chunk stays on-topic.
+
+    ```typescript
+    import { SemanticChunker } from '@chonkiejs/core';
+
+    const chunker = new SemanticChunker({
+      maxChunkSize: 512,
+      similarityThreshold: 0.5,
+      embeddingFn: async (texts) => { /* your embeddings */ }
+    });
+    const chunks = await chunker.chunk(text);
+    ```
+  </Step>
+
+  <Step>
+    ### You're processing code
+
+    Use **CodeChunker** — it parses the AST so your chunks respect function/class boundaries.
+
+    ```typescript
+    import { CodeChunker } from '@chonkiejs/core';
+
+    const chunker = new CodeChunker({ language: 'typescript', maxChunkSize: 512 });
+    const chunks = await chunker.chunk(sourceCode);
+    ```
+  </Step>
+
+  <Step>
+    ### You need raw speed above all else
+
+    Use **FastChunker** for pipelines where throughput matters more than boundary quality.
+
+    ```typescript
+    import { FastChunker } from '@chonkiejs/core';
+
+    const chunker = new FastChunker({ maxChunkSize: 4096 });
+    const chunks = await chunker.chunk(text);
+    ```
+  </Step>
+</Steps>
+
+## F.A.Q.
+
+<Accordions>
+  <Accordion title="Can I switch chunkers without changing my pipeline?">
+    Yes. All chunkers share the same async interface (`chunk()`, `chunkBatch()`). Swap one for another and everything downstream stays the same.
+  </Accordion>
+
+  <Accordion title="Should I use SemanticChunker or RecursiveChunker?">
+    **RecursiveChunker** if you want speed and simplicity — it uses structural separators (newlines, periods, etc.) to find boundaries. **SemanticChunker** if retrieval quality is more important — it uses embeddings to keep semantically related content together, but requires an embedding function.
+  </Accordion>
+
+  <Accordion title="Is FastChunker good enough for RAG?">
+    It depends on your tolerance for imperfect boundaries. FastChunker splits on byte counts, which can cut mid-word or mid-sentence. For RAG where retrieval quality matters, prefer RecursiveChunker or SemanticChunker.
+  </Accordion>
+</Accordions>

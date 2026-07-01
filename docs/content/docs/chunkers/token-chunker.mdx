@@ -1,0 +1,73 @@
+---
+title: "TokenChunker"
+description: "Fixed-size token-based chunking"
+---
+
+The `TokenChunker` splits text into fixed-size token chunks. Best for maintaining consistent chunk sizes when working with token-based models.
+
+## Installation
+
+```bash
+npm install @chonkiejs/core
+```
+
+## Initialization
+
+```typescript
+import { TokenChunker } from '@chonkiejs/core';
+
+const chunker = await TokenChunker.create({
+  chunkSize: 512,
+  chunkOverlap: 128
+});
+```
+
+## Parameters
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `chunkSize` | `number` | `512` | Maximum tokens per chunk |
+| `chunkOverlap` | `number` | `128` | Number of overlapping tokens between chunks |
+| `tokenizer` | `string` | `'character'` | Tokenizer to use (`'character'`, `'gpt2'`, or HuggingFace model name) |
+
+## Usage
+
+```typescript
+import { TokenChunker } from '@chonkiejs/core';
+
+const chunker = await TokenChunker.create({
+  chunkSize: 512,
+  chunkOverlap: 128
+});
+
+const text = "Your long document text...";
+const chunks = await chunker.chunk(text);
+
+for (const chunk of chunks) {
+  console.log(`Chunk: ${chunk.text.slice(0, 50)}...`);
+  console.log(`Tokens: ${chunk.tokenCount}`);
+}
+```
+
+## With HuggingFace Tokenizer
+
+For real token counting (requires `@chonkiejs/token`):
+
+```typescript
+import { TokenChunker } from '@chonkiejs/core';
+
+const chunker = await TokenChunker.create({
+  tokenizer: 'gpt2',
+  chunkSize: 512,
+  chunkOverlap: 128
+});
+
+const chunks = await chunker.chunk(text);
+```
+
+## Batch Processing
+
+```typescript
+const documents = ['Doc one...', 'Doc two...', 'Doc three...'];
+const results = await chunker.chunkBatch(documents);
+```

@@ -1,0 +1,136 @@
+---
+title: "Handshakes Overview"
+description: "Vector database integrations for storing and searching chunks"
+---
+
+Handshakes are ChonkieJS's adapter layer for vector databases. They provide a unified interface to store chunks with their embeddings and perform similarity search across 10 supported backends.
+
+## How It Works
+
+1. **Chunk** your text with any chunker
+2. **Initialize** a handshake with your vector DB client and an embedding function
+3. **Write** chunks — embeddings are computed and stored automatically
+4. **Search** by text query or raw embedding vector
+
+```typescript
+import { RecursiveChunker, ChromaHandshake } from '@chonkiejs/core';
+
+const chunker = new RecursiveChunker({ chunkSize: 512 });
+const chunks = await chunker.chunk(document);
+
+const handshake = new ChromaHandshake({
+  collection: myChromaCollection,
+  embeddings: async (texts) => embedModel.encode(texts),
+});
+
+await handshake.write(chunks);
+
+const results = await handshake.search('what is the return policy?');
+```
+
+## Available Handshakes
+
+<Cards>
+  <Card title="ChromaHandshake" href="/handshakes/chroma">
+    ChromaDB — in-memory or persistent local vector store.
+  </Card>
+  <Card title="PineconeHandshake" href="/handshakes/pinecone">
+    Pinecone — fully managed cloud vector database.
+  </Card>
+  <Card title="QdrantHandshake" href="/handshakes/qdrant">
+    Qdrant — open-source vector search engine.
+  </Card>
+  <Card title="WeaviateHandshake" href="/handshakes/weaviate">
+    Weaviate — AI-native vector database.
+  </Card>
+  <Card title="MilvusHandshake" href="/handshakes/milvus">
+    Milvus — scalable open-source vector DB.
+  </Card>
+  <Card title="MongoDBHandshake" href="/handshakes/mongodb">
+    MongoDB Atlas Vector Search.
+  </Card>
+  <Card title="ElasticHandshake" href="/handshakes/elasticsearch">
+    Elasticsearch with vector search support.
+  </Card>
+  <Card title="LanceDBHandshake" href="/handshakes/lancedb">
+    LanceDB — serverless columnar vector database.
+  </Card>
+  <Card title="TurbopufferHandshake" href="/handshakes/turbopuffer">
+    Turbopuffer — edge-optimized vector search.
+  </Card>
+  <Card title="PgvectorHandshake" href="/handshakes/pgvector">
+    PostgreSQL with the pgvector extension.
+  </Card>
+</Cards>
+
+## Common Interface
+
+All handshakes implement the same four methods:
+
+```typescript
+// Store chunks with their embeddings
+await handshake.write(chunks);
+
+// Search by text query (embedding computed internally)
+const results = await handshake.search('query text', { limit: 10 });
+
+// Search by pre-computed embedding vector
+const results = await handshake.searchByVector(embedding, { limit: 10 });
+
+// Get total stored chunk count
+const total = await handshake.count();
+```
+
+## Search Results
+
+Every search returns `HandshakeSearchResult[]`:
+
+```typescript
+interface HandshakeSearchResult {
+  id: string;         // Deterministic SHA256-based ID
+  score: number;      // Similarity score (0–1, higher is better)
+  text: string;       // Original chunk text
+  startIndex: number; // Start position in source document
+  endIndex: number;   // End position in source document
+  tokenCount: number; // Token count of the chunk
+  metadata?: Record<string, unknown>;
+}
+```
+
+## Embeddings
+
+Handshakes accept an embedding function in two forms:
+
+```typescript
+// Function form
+const handshake = new ChromaHandshake({
+  collection,
+  embeddings: async (texts: string[]) => {
+    return await myModel.encode(texts); // returns number[][]
+  },
+});
+
+// Object form (must have an `embed` method)
+const handshake = new ChromaHandshake({
+  collection,
+  embeddings: myEmbeddingModel, // { embed(texts: string[]): Promise<number[][]> }
+});
+```
+
+## ID Generation
+
+Chunk IDs are deterministic — writing the same chunk twice won't create duplicates. IDs are generated as:
+
+```
+SHA256(idPrefix + startIndex + ":" + endIndex + ":" + text).slice(0, 32)
+```
+
+Use `idPrefix` to namespace IDs when storing chunks from multiple documents in the same collection:
+
+```typescript
+const handshake = new PineconeHandshake({
+  index: myIndex,
+  embeddings: embed,
+  idPrefix: 'doc-123/',
+});
+```
