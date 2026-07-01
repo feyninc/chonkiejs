@@ -47,16 +47,9 @@ import type {
 
 ### Factory pattern (async creation):
 
-Some chunkers require async initialization:
+All chunkers require async initialization via the static `create()` factory method:
 
 ```typescript
-// TokenChunker, SentenceChunker, SemanticChunker, CodeChunker, TableChunker, FastChunker
-const chunker = await SomeChunker.create(options);
-```
-
-### Direct instantiation:
-
-```typescript
-// RecursiveChunker
-const chunker = new RecursiveChunker(options);
+// All chunkers: RecursiveChunker, TokenChunker, SentenceChunker, SemanticChunker, CodeChunker, TableChunker, FastChunker
+const chunker = await RecursiveChunker.create(options);
 ```

@@ -28,7 +28,7 @@ npm install @chonkiejs/core
 ```typescript
 import { RecursiveChunker } from '@chonkiejs/core';
 
-const chunker = new RecursiveChunker({
+const chunker = await RecursiveChunker.create({
   chunkSize: 512,
   minCharactersPerChunk: 24
 });
@@ -48,7 +48,7 @@ const chunker = new RecursiveChunker({
 ```typescript
 import { RecursiveChunker } from '@chonkiejs/core';
 
-const chunker = new RecursiveChunker({ chunkSize: 512 });
+const chunker = await RecursiveChunker.create({ chunkSize: 512 });
 const chunks = await chunker.chunk('Your long document text...');
 
 for (const chunk of chunks) {
@@ -73,7 +73,7 @@ const codeRules = new RecursiveRules({
   ]
 });
 
-const chunker = new RecursiveChunker({
+const chunker = await RecursiveChunker.create({
   chunkSize: 512,
   rules: codeRules
 });

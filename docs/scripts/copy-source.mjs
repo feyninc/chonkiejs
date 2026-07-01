@@ -1,8 +1,9 @@
-import { cp, writeFile, readdir } from 'node:fs/promises';
+import { cp, writeFile, readdir, mkdir } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 
 const outDir = path.resolve('out');
+await mkdir(outDir, { recursive: true });
 
 async function getContentFiles(dir, base = '') {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -32,6 +33,7 @@ for (const file of files) {
   const dest = path.join(outDir, file);
   if (existsSync(src)) {
     const destDir = path.dirname(dest);
+    await mkdir(destDir, { recursive: true });
     await cp(src, dest, { recursive: true });
   }
 }

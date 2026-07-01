@@ -22,11 +22,10 @@ const embedFn = async (texts: string[]) => {
 };
 
 const chunker = await SemanticChunker.create({
-  embedFunction: embedFn,
+  embeddings: embedFn,
   threshold: 0.8,
   chunkSize: 2048,
   similarityWindow: 3,
-  skipWindow: 0
 });
 ```
 
@@ -34,11 +33,10 @@ const chunker = await SemanticChunker.create({
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `embedFunction` | `(texts: string[]) => Promise<number[][]>` | required | Custom embedding function |
-| `threshold` | `number` | `0.8` | Similarity threshold (0-1). Lower = larger chunks |
+| `embeddings` | `EmbedFunction \| EmbeddingModel` | required | Embedding function or object with `embed()` method |
+| `threshold` | `number` | `0.8` | Similarity threshold (0-1). Lower = more splits |
 | `chunkSize` | `number` | `2048` | Maximum tokens per chunk |
-| `similarityWindow` | `number` | `3` | Window for similarity calculation |
-| `skipWindow` | `number` | `0` | Skip-and-merge window (0=disabled) |
+| `similarityWindow` | `number` | `3` | Number of sentences per sliding window embedding |
 
 ## Usage
 
@@ -52,7 +50,7 @@ const embedFn = async (texts: string[]) => {
 };
 
 const chunker = await SemanticChunker.create({
-  embedFunction: embedFn,
+  embeddings: embedFn,
   threshold: 0.7,
   chunkSize: 512
 });
@@ -67,7 +65,7 @@ for (const chunk of chunks) {
 ```
 
 <Callout type="info">
-The `embedFunction` must accept an array of strings and return a Promise resolving to an array of number arrays (embeddings). Each embedding vector should have the same dimensionality.
+The `embeddings` option accepts either a function `(texts: string[]) => Promise<number[][]>` or an object with an `embed(texts)` method. Each embedding vector should have the same dimensionality.
 </Callout>
 
 ## With OpenAI Embeddings
@@ -87,7 +85,7 @@ const embedFn = async (texts: string[]) => {
 };
 
 const chunker = await SemanticChunker.create({
-  embedFunction: embedFn,
+  embeddings: embedFn,
   threshold: 0.75,
   chunkSize: 1024
 });

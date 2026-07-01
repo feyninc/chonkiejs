@@ -3,7 +3,7 @@ title: "Chunkers Overview"
 description: "Available chunkers in ChonkieJS"
 ---
 
-ChonkieJS provides multiple chunking strategies for different text processing needs. All chunkers share a consistent async interface.
+ChonkieJS provides multiple chunking strategies for different text processing needs. All chunkers use an async `create()` factory and return `Promise<Chunk[]>` from their `chunk()` method.
 
 <Callout type="info">
   Not sure which chunker to use? Check out the [Choosing a Chunker](/chunkers/choosing-a-chunker) guide for recommendations based on your use case.

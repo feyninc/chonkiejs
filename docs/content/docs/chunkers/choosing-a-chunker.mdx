@@ -56,7 +56,7 @@ Ask yourself these questions in order:
     ```typescript
     import { RecursiveChunker } from '@chonkiejs/core';
 
-    const chunker = new RecursiveChunker({ maxChunkSize: 512 });
+    const chunker = await RecursiveChunker.create({ chunkSize: 512 });
     const chunks = await chunker.chunk(text);
     ```
   </Step>
@@ -69,10 +69,10 @@ Ask yourself these questions in order:
     ```typescript
     import { SemanticChunker } from '@chonkiejs/core';
 
-    const chunker = new SemanticChunker({
-      maxChunkSize: 512,
-      similarityThreshold: 0.5,
-      embeddingFn: async (texts) => { /* your embeddings */ }
+    const chunker = await SemanticChunker.create({
+      chunkSize: 512,
+      threshold: 0.5,
+      embeddings: async (texts) => { /* your embeddings */ }
     });
     const chunks = await chunker.chunk(text);
     ```
@@ -86,7 +86,7 @@ Ask yourself these questions in order:
     ```typescript
     import { CodeChunker } from '@chonkiejs/core';
 
-    const chunker = new CodeChunker({ language: 'typescript', maxChunkSize: 512 });
+    const chunker = await CodeChunker.create({ language: 'typescript', chunkSize: 512 });
     const chunks = await chunker.chunk(sourceCode);
     ```
   </Step>
@@ -99,7 +99,7 @@ Ask yourself these questions in order:
     ```typescript
     import { FastChunker } from '@chonkiejs/core';
 
-    const chunker = new FastChunker({ maxChunkSize: 4096 });
+    const chunker = await FastChunker.create({ chunkSize: 4096 });
     const chunks = await chunker.chunk(text);
     ```
   </Step>

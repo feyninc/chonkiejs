@@ -51,7 +51,7 @@ interface RecursiveChunkerOptions {
   chunkSize?: number;              // Default: 512
   minCharactersPerChunk?: number;  // Default: 24
   rules?: RecursiveRules;          // Default: standard rules
-  tokenizer?: Tokenizer;           // Default: character tokenizer
+  tokenizer?: Tokenizer | string;  // Default: character tokenizer
 }
 ```
 

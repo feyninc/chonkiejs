@@ -15,7 +15,7 @@ Handshakes are ChonkieJS's adapter layer for vector databases. They provide a un
 ```typescript
 import { RecursiveChunker, ChromaHandshake } from '@chonkiejs/core';
 
-const chunker = new RecursiveChunker({ chunkSize: 512 });
+const chunker = await RecursiveChunker.create({ chunkSize: 512 });
 const chunks = await chunker.chunk(document);
 
 const handshake = new ChromaHandshake({

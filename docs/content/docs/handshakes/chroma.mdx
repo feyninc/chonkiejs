@@ -42,7 +42,7 @@ const handshake = new ChromaHandshake({
 ```typescript
 import { RecursiveChunker, ChromaHandshake } from '@chonkiejs/core';
 
-const chunker = new RecursiveChunker({ chunkSize: 512 });
+const chunker = await RecursiveChunker.create({ chunkSize: 512 });
 const chunks = await chunker.chunk(document);
 
 // Store chunks

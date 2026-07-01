@@ -28,14 +28,13 @@ ChonkieJS is the JavaScript/TypeScript implementation of [Chonkie](https://githu
 |---------|-------------|
 | `@chonkiejs/core` | Core chunking library with all chunkers |
 | `@chonkiejs/token` | HuggingFace tokenizer support |
-| `@chonkiejs/cloud` | Cloud API-based chunking |
 
 ## Quick Example
 
 ```typescript
 import { RecursiveChunker } from '@chonkiejs/core';
 
-const chunker = new RecursiveChunker({ chunkSize: 512 });
+const chunker = await RecursiveChunker.create({ chunkSize: 512 });
 const chunks = await chunker.chunk('Your long document text...');
 
 for (const chunk of chunks) {

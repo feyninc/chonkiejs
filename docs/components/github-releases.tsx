@@ -146,6 +146,14 @@ function formatBody(body: string): string {
   // Remove top-level h1 headings (redundant with release name)
   text = text.replace(/^# .+$/gm, "");
 
+  // Strip potentially dangerous HTML elements
+  text = text.replace(/<script[\s\S]*?<\/script>/gi, "");
+  text = text.replace(/<iframe[\s\S]*?<\/iframe>/gi, "");
+  text = text.replace(/<object[\s\S]*?<\/object>/gi, "");
+  text = text.replace(/<embed[\s\S]*?>/gi, "");
+  text = text.replace(/on\w+="[^"]*"/gi, "");
+  text = text.replace(/on\w+='[^']*'/gi, "");
+
   // Strip all raw HTML tables (complex nested ones from GitHub)
   text = text.replace(/<table[\s\S]*?<\/table>/gi, "");
 

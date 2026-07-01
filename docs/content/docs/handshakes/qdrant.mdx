@@ -40,7 +40,7 @@ const handshake = new QdrantHandshake({
 ```typescript
 import { RecursiveChunker, QdrantHandshake } from '@chonkiejs/core';
 
-const chunker = new RecursiveChunker({ chunkSize: 512 });
+const chunker = await RecursiveChunker.create({ chunkSize: 512 });
 const chunks = await chunker.chunk(document);
 
 await handshake.write(chunks);

@@ -52,10 +52,10 @@ Having trouble? Check the common issues below. If your problem isn't listed, rea
 
 <Accordions>
   <Accordion title="My chunks are too small">
-    Increase `maxChunkSize`. The value represents the maximum token count per chunk.
+    Increase `chunkSize`. The value represents the maximum token count per chunk.
 
     ```typescript
-    const chunker = new RecursiveChunker({ maxChunkSize: 1024 });
+    const chunker = await RecursiveChunker.create({ chunkSize: 1024 });
     ```
 
     Common values:
@@ -67,21 +67,21 @@ Having trouble? Check the common issues below. If your problem isn't listed, rea
   <Accordion title="My chunks are too large">
     If chunks exceed your expected size:
 
-    1. `maxChunkSize` is in **tokens**, not characters
+    1. `chunkSize` is in **tokens**, not characters
     2. Some chunkers (SentenceChunker, RecursiveChunker) won't split mid-sentence
     3. For strict limits, use `TokenChunker` which guarantees the size constraint
   </Accordion>
 
   <Accordion title="SemanticChunker requires an embedding function">
-    SemanticChunker needs you to provide an `embeddingFn` that maps text to vectors:
+    SemanticChunker needs you to provide an `embeddings` function that maps text to vectors:
 
     ```typescript
     import { SemanticChunker } from '@chonkiejs/core';
 
-    const chunker = new SemanticChunker({
-      maxChunkSize: 512,
-      similarityThreshold: 0.5,
-      embeddingFn: async (texts: string[]) => {
+    const chunker = await SemanticChunker.create({
+      chunkSize: 512,
+      threshold: 0.5,
+      embeddings: async (texts: string[]) => {
         // Call your embedding API here
         // Must return number[][] (one vector per input text)
         const response = await fetch('your-embedding-api', {
@@ -99,7 +99,7 @@ Having trouble? Check the common issues below. If your problem isn't listed, rea
 
     1. **Wrong language** — make sure the `language` parameter matches your file (`"typescript"`, `"python"`, etc.)
     2. **Invalid syntax** — the AST parser can't handle files with syntax errors
-    3. **Very small files** — if the file is smaller than `maxChunkSize`, you get a single chunk
+    3. **Very small files** — if the file is smaller than `chunkSize`, you get a single chunk
   </Accordion>
 
   <Accordion title="FastChunker cuts in the middle of words">
@@ -159,13 +159,13 @@ Having trouble? Check the common issues below. If your problem isn't listed, rea
 
 <Accordions>
   <Accordion title="Custom tokenizer not counting tokens correctly">
-    If you're providing a custom tokenizer, make sure it returns accurate token counts. The chunkers rely on these counts to respect `maxChunkSize`:
+    If you're providing a custom tokenizer, make sure it returns accurate token counts. The chunkers rely on these counts to respect `chunkSize`:
 
     ```typescript
     import { TokenChunker } from '@chonkiejs/core';
 
-    const chunker = new TokenChunker({
-      maxChunkSize: 512,
+    const chunker = await TokenChunker.create({
+      chunkSize: 512,
       tokenizer: {
         encode: (text) => /* must return token array */,
         decode: (tokens) => /* must return string */,
