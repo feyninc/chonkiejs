@@ -1,0 +1,5 @@
+{
+  "title": "API Reference",
+  "icon": "Server",
+  "pages": ["overview", "types", "tokenizer", "rules"]
+}

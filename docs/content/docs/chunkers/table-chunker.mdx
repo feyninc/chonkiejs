@@ -1,0 +1,79 @@
+---
+title: "TableChunker"
+description: "Chunk markdown/HTML tables by row or token count"
+---
+
+The `TableChunker` splits Markdown and HTML tables into smaller sub-tables while preserving the original table header in every chunk.
+
+## Installation
+
+```bash
+npm install @chonkiejs/core
+```
+
+## Modes
+
+The TableChunker supports two modes:
+
+- **Row mode** (`tokenizer: 'row'`): `chunkSize` is the maximum number of data rows per chunk
+- **Token mode**: `chunkSize` is the maximum token count per chunk
+
+## Initialization
+
+```typescript
+import { TableChunker } from '@chonkiejs/core';
+
+// Row mode (default): up to 3 data rows per chunk
+const rowChunker = await TableChunker.create({
+  tokenizer: 'row',
+  chunkSize: 3
+});
+
+// Token mode: use tokenizer-based limits
+const tokenChunker = await TableChunker.create({
+  tokenizer: 'character',
+  chunkSize: 512
+});
+```
+
+## Parameters
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `tokenizer` | `Tokenizer \| 'row' \| string` | `'row'` | Chunking mode. `'row'` uses row-based chunking. |
+| `chunkSize` | `number` | `3` | Max rows per chunk (row mode) or max tokens per chunk (token mode) |
+
+## Usage
+
+```typescript
+import { TableChunker } from '@chonkiejs/core';
+
+const markdownTable = `
+| Name | Age | City |
+|------|-----|------|
+| Alice | 30 | NYC |
+| Bob | 25 | LA |
+| Carol | 35 | Chicago |
+| Dave | 28 | Boston |
+| Eve | 32 | Seattle |
+`.trim();
+
+const chunker = await TableChunker.create({
+  tokenizer: 'row',
+  chunkSize: 2
+});
+
+const chunks = chunker.chunk(markdownTable);
+
+for (const chunk of chunks) {
+  console.log(chunk.text);
+  console.log('---');
+}
+```
+
+## Notes
+
+- In row mode, `tokenCount` on output chunks represents the number of data rows in that chunk
+- In token mode, `tokenCount` represents tokenizer-based token count
+- Empty or invalid table input returns an empty array
+- Headers are preserved in every chunk

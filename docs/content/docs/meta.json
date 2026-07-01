@@ -1,0 +1,15 @@
+{
+  "title": "ChonkieJS",
+  "description": "JavaScript chunking library for RAG pipelines",
+  "root": true,
+  "icon": "BookOpen",
+  "pages": [
+    "index",
+    "getting-started",
+    "chunkers",
+    "handshakes",
+    "api",
+    "troubleshooting",
+    "changelog"
+  ]
+}

@@ -1,0 +1,79 @@
+---
+title: "CodeChunker"
+description: "AST-aware chunking for source code"
+---
+
+The `CodeChunker` splits source code based on its abstract syntax tree (AST) structure, powered by tree-sitter. It understands code semantics and creates chunks that respect function/class boundaries.
+
+## Installation
+
+```bash
+npm install @chonkiejs/core
+```
+
+## Initialization
+
+```typescript
+import { CodeChunker } from '@chonkiejs/core';
+
+const chunker = await CodeChunker.create({
+  chunkSize: 512,
+  language: 'typescript'
+});
+```
+
+## Parameters
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `chunkSize` | `number` | `512` | Maximum tokens per chunk |
+| `language` | `string` | auto-detect | Programming language for AST parsing |
+| `tokenizer` | `string` | `'character'` | Tokenizer to use |
+
+## Supported Languages
+
+The CodeChunker supports a wide range of languages via tree-sitter:
+
+- JavaScript / TypeScript
+- Python
+- Rust
+- Go
+- Java
+- C / C++
+- Ruby
+- And many more
+
+## Usage
+
+```typescript
+import { CodeChunker } from '@chonkiejs/core';
+
+const chunker = await CodeChunker.create({
+  chunkSize: 512,
+  language: 'typescript'
+});
+
+const code = `
+function hello() {
+  console.log("Hello, world!");
+}
+
+class Calculator {
+  add(a: number, b: number): number {
+    return a + b;
+  }
+
+  subtract(a: number, b: number): number {
+    return a - b;
+  }
+}
+`;
+
+const chunks = await chunker.chunk(code);
+
+for (const chunk of chunks) {
+  console.log(`--- Chunk ---`);
+  console.log(chunk.text);
+  console.log(`Tokens: ${chunk.tokenCount}`);
+}
+```

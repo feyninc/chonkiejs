@@ -1,0 +1,59 @@
+---
+title: "SentenceChunker"
+description: "Split text at sentence boundaries"
+---
+
+The `SentenceChunker` splits text at sentence boundaries, preserving semantic completeness at the sentence level.
+
+## Installation
+
+```bash
+npm install @chonkiejs/core
+```
+
+## Initialization
+
+```typescript
+import { SentenceChunker } from '@chonkiejs/core';
+
+const chunker = await SentenceChunker.create({
+  chunkSize: 512,
+  chunkOverlap: 128,
+  minSentencesPerChunk: 1
+});
+```
+
+## Parameters
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `chunkSize` | `number` | `512` | Maximum tokens per chunk |
+| `chunkOverlap` | `number` | `128` | Overlapping tokens between chunks |
+| `minSentencesPerChunk` | `number` | `1` | Minimum sentences per chunk |
+| `tokenizer` | `string` | `'character'` | Tokenizer to use |
+
+## Usage
+
+```typescript
+import { SentenceChunker } from '@chonkiejs/core';
+
+const chunker = await SentenceChunker.create({
+  chunkSize: 512,
+  chunkOverlap: 128
+});
+
+const text = "First sentence. Second sentence. Third sentence.";
+const chunks = await chunker.chunk(text);
+
+for (const chunk of chunks) {
+  console.log(`Chunk: ${chunk.text}`);
+  console.log(`Tokens: ${chunk.tokenCount}`);
+}
+```
+
+## Batch Processing
+
+```typescript
+const documents = ['Document one.', 'Document two.'];
+const results = await chunker.chunkBatch(documents);
+```
