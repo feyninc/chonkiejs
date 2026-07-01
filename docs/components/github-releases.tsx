@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { createHighlighter, type Highlighter } from "shiki";
+import DOMPurify from "dompurify";
 
 interface Release {
   id: number;
@@ -146,13 +147,10 @@ function formatBody(body: string): string {
   // Remove top-level h1 headings (redundant with release name)
   text = text.replace(/^# .+$/gm, "");
 
-  // Strip potentially dangerous HTML elements
-  text = text.replace(/<script[\s\S]*?<\/script>/gi, "");
-  text = text.replace(/<iframe[\s\S]*?<\/iframe>/gi, "");
-  text = text.replace(/<object[\s\S]*?<\/object>/gi, "");
-  text = text.replace(/<embed[\s\S]*?>/gi, "");
-  text = text.replace(/on\w+="[^"]*"/gi, "");
-  text = text.replace(/on\w+='[^']*'/gi, "");
+  // Sanitize HTML using DOMPurify (strips scripts, iframes, event handlers, etc.)
+  text = DOMPurify.sanitize(text, {
+    FORBID_TAGS: ["script", "iframe", "object", "embed", "style", "form"],
+  });
 
   // Strip all raw HTML tables (complex nested ones from GitHub)
   text = text.replace(/<table[\s\S]*?<\/table>/gi, "");
