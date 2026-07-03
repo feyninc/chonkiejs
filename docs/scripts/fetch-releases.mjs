@@ -1,14 +1,17 @@
 import { writeFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 
-const REPO = 'chonkie-inc/chonkiejs';
 const OUT_DIR = path.resolve('public', 'data');
-const OUT_FILE = path.join(OUT_DIR, 'releases.json');
 
-async function fetchReleases() {
-  console.log(`[Releases] Fetching releases from ${REPO}...`);
+const REPOS = [
+  { repo: 'chonkie-inc/chonkie', file: 'releases.json' },
+  { repo: 'chonkie-inc/chonkiejs', file: 'releases-js.json' },
+];
 
-  const res = await fetch(`https://api.github.com/repos/${REPO}/releases?per_page=50`, {
+async function fetchReleases(repo, outFile) {
+  console.log(`[Releases] Fetching releases from ${repo}...`);
+
+  const res = await fetch(`https://api.github.com/repos/${repo}/releases?per_page=50`, {
     headers: {
       'Accept': 'application/vnd.github.v3+json',
       ...(process.env.GITHUB_TOKEN && { 'Authorization': `token ${process.env.GITHUB_TOKEN}` }),
@@ -16,8 +19,8 @@ async function fetchReleases() {
   });
 
   if (!res.ok) {
-    console.error(`[Releases] Failed to fetch: ${res.status} ${res.statusText}`);
-    console.error('[Releases] Skipping release sync (using cached data if available)');
+    console.error(`[Releases] Failed to fetch ${repo}: ${res.status} ${res.statusText}`);
+    console.error('[Releases] Skipping (using cached data if available)');
     return;
   }
 
@@ -32,12 +35,17 @@ async function fetchReleases() {
     html_url: r.html_url,
   }));
 
-  await mkdir(OUT_DIR, { recursive: true });
-  await writeFile(OUT_FILE, JSON.stringify(simplified, null, 2));
-  console.log(`[Releases] Saved ${simplified.length} releases to ${OUT_FILE}`);
+  const outPath = path.join(OUT_DIR, outFile);
+  await writeFile(outPath, JSON.stringify(simplified, null, 2));
+  console.log(`[Releases] Saved ${simplified.length} releases to ${outPath}`);
 }
 
-fetchReleases().catch((err) => {
+async function main() {
+  await mkdir(OUT_DIR, { recursive: true });
+  await Promise.all(REPOS.map(({ repo, file }) => fetchReleases(repo, file)));
+}
+
+main().catch((err) => {
   console.error('[Releases] Error:', err.message);
   console.error('[Releases] Skipping release sync');
 });

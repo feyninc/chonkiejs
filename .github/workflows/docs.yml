@@ -1,20 +1,16 @@
-name: Deploy Docs
+name: Docs CI
 
 on:
   push:
     branches: [main]
     paths:
       - 'docs/**'
+      - '.github/workflows/docs.yml'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - '.github/workflows/docs.yml'
   workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
 
 jobs:
   build:
@@ -35,18 +31,5 @@ jobs:
 
       - run: pnpm --filter @chonkie/docs build
         env:
-          BASE_PATH: /chonkiejs
-
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: docs/out
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          CHONKIE_DOCS_URL: https://feyninc.github.io/chonkie
+          NEXT_PUBLIC_CHONKIE_DOCS_URL: https://feyninc.github.io/chonkie

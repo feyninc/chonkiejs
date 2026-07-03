@@ -13,13 +13,13 @@ interface Release {
   html_url: string;
 }
 
-export function GithubReleases() {
+export function GithubReleases({ src = "/data/releases-js.json" }: { src?: string }) {
   const [releases, setReleases] = useState<Release[]>([]);
   const [loading, setLoading] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    fetch("/data/releases.json")
+    fetch(src)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load releases");
         return res.json();
@@ -31,7 +31,7 @@ export function GithubReleases() {
       .catch(() => {
         setLoading(false);
       });
-  }, []);
+  }, [src]);
 
   useEffect(() => {
     if (!containerRef.current || releases.length === 0) return;

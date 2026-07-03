@@ -136,3 +136,5 @@ dist
 .pnp.*
 .vscode
 .chaider
+.vercel
+.env*

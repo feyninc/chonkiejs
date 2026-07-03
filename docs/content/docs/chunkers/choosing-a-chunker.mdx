@@ -8,16 +8,16 @@ Not sure which chunker to use? This guide helps you pick the right one based on 
 ## Quick Recommendations
 
 <Cards>
-  <Card title="Building a RAG chatbot?" href="/chunkers/recursive-chunker">
+  <Card title="Building a RAG chatbot?" href="/chonkiejs/chunkers/recursive-chunker">
     Use **RecursiveChunker** for general-purpose document chunking, or **SemanticChunker** if you need high topical coherence.
   </Card>
-  <Card title="Processing source code?" href="/chunkers/code-chunker">
+  <Card title="Processing source code?" href="/chonkiejs/chunkers/code-chunker">
     Use **CodeChunker** — it understands AST structure and keeps functions/classes intact.
   </Card>
-  <Card title="Need maximum throughput?" href="/chunkers/fast-chunker">
+  <Card title="Need maximum throughput?" href="/chonkiejs/chunkers/fast-chunker">
     Use **FastChunker** — high-performance byte-based chunking with SIMD acceleration.
   </Card>
-  <Card title="Working with tabular data?" href="/chunkers/table-chunker">
+  <Card title="Working with tabular data?" href="/chonkiejs/chunkers/table-chunker">
     Use **TableChunker** — preserves headers and splits by rows.
   </Card>
 </Cards>
@@ -26,12 +26,12 @@ Not sure which chunker to use? This guide helps you pick the right one based on 
 
 Ask yourself these questions in order:
 
-1. **Are you chunking source code?** → Use [CodeChunker](/chunkers/code-chunker)
-2. **Are you chunking tables?** → Use [TableChunker](/chunkers/table-chunker)
-3. **Is raw throughput your top priority?** → Use [FastChunker](/chunkers/fast-chunker)
-4. **Do you need chunks grouped by topic?** → Use [SemanticChunker](/chunkers/semantic-chunker)
-5. **Are simple sentence-boundary splits enough?** → Use [SentenceChunker](/chunkers/sentence-chunker)
-6. **None of the above?** → Use [RecursiveChunker](/chunkers/recursive-chunker) (best default)
+1. **Are you chunking source code?** → Use [CodeChunker](/chonkiejs/chunkers/code-chunker)
+2. **Are you chunking tables?** → Use [TableChunker](/chonkiejs/chunkers/table-chunker)
+3. **Is raw throughput your top priority?** → Use [FastChunker](/chonkiejs/chunkers/fast-chunker)
+4. **Do you need chunks grouped by topic?** → Use [SemanticChunker](/chonkiejs/chunkers/semantic-chunker)
+5. **Are simple sentence-boundary splits enough?** → Use [SentenceChunker](/chonkiejs/chunkers/sentence-chunker)
+6. **None of the above?** → Use [RecursiveChunker](/chonkiejs/chunkers/recursive-chunker) (best default)
 
 ## Comparison Table
 

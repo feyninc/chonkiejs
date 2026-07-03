@@ -5,6 +5,9 @@ out
 # Fumadocs generated
 .source/
 
+# Synced Python docs (fetched from chonkie GitHub Pages)
+chonkie/content/
+
 # Next.js generated
 next-env.d.ts
 

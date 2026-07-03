@@ -60,16 +60,73 @@ body {
   color: var(--color-fd-primary-foreground);
 }
 
-pre,
+/* Code blocks — match page background in both themes */
+figure.shiki,
+figure.chonkie-codeblock {
+  border-radius: 0.25rem;
+  background-color: var(--color-fd-background) !important;
+  --shiki-light-bg: var(--color-fd-background);
+  --shiki-dark-bg: var(--color-fd-background);
+  box-shadow: none !important;
+}
+
+figure.shiki.bg-fd-card,
+figure.shiki.bg-fd-secondary {
+  background-color: var(--color-fd-background) !important;
+}
+
+figure.shiki pre,
+figure.shiki code,
+figure.shiki .line,
+figure.shiki .shiki {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+/* Single bordered container — scroll viewport stays flush inside the figure */
+figure.shiki > [role="region"] {
+  border: none;
+  box-shadow: none;
+}
+
+/* Tabbed install snippets — outer shell matches page too */
+.border.bg-fd-secondary.my-4:has(figure.shiki) {
+  background-color: var(--color-fd-background) !important;
+}
+
+.dark figure.shiki {
+  border-color: rgba(196, 160, 136, 0.22) !important;
+}
+
+.dark .shiki:not(.not-fumadocs-codeblock *) code span,
+.dark code.shiki:not(.not-fumadocs-code *) span {
+  color: var(--shiki-dark) !important;
+  background-color: transparent !important;
+}
+
+/* Shiki sometimes inlines theme bg on spans — strip so page bg shows through */
+.shiki span[style*="background"] {
+  background-color: transparent !important;
+}
+
+:not(pre) > code {
+  background: var(--color-fd-muted);
+  color: var(--color-fd-foreground);
+  border: 1px solid var(--color-fd-border);
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+}
+
+/* Release / legacy code blocks (exclude Fumadocs figure blocks above) */
 .release-body pre.shiki,
 .release-body .release-code {
   border-radius: 0.25rem;
   border: 1px solid var(--color-fd-border);
 }
 
-.dark pre,
 .dark .release-body pre.shiki {
-  background: #141414;
+  background: var(--color-fd-background);
 }
 
 #nd-page-footer {
