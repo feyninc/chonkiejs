@@ -5,6 +5,10 @@ import {
   externalDocSources,
   rewriteMdxAssetUrls,
 } from "./external-docs.config.mjs";
+import {
+  buildManifestFromGithub,
+  rawGithubFileUrl,
+} from "./sync-github-fallback.mjs";
 
 const envPath = path.resolve(".env");
 if (existsSync(envPath)) {
@@ -43,6 +47,36 @@ function applyTransforms(content, transforms = []) {
   return next;
 }
 
+function resolveGithubFallback(source) {
+  const owner =
+    process.env.CHONKIE_DOCS_GITHUB_OWNER ?? source.githubFallback?.owner;
+  const repo = process.env.CHONKIE_DOCS_GITHUB_REPO ?? source.githubFallback?.repo;
+  const branch =
+    process.env.CHONKIE_DOCS_GITHUB_BRANCH ?? source.githubFallback?.branch;
+
+  if (!owner || !repo || !branch) return null;
+  return { owner, repo, branch };
+}
+
+async function loadManifest(source, baseUrl) {
+  const manifestUrl = `${baseUrl}/manifest.json`;
+
+  try {
+    const manifest = JSON.parse(await fetchText(manifestUrl));
+    return { manifest, source: "pages" };
+  } catch (error) {
+    const fallback = resolveGithubFallback(source);
+    if (!fallback) throw error;
+
+    console.warn(
+      `manifest.json not found at ${manifestUrl} — falling back to GitHub (${fallback.owner}/${fallback.repo}@${fallback.branch}).`,
+    );
+
+    const manifest = await buildManifestFromGithub(fallback);
+    return { manifest, source: "github", github: fallback };
+  }
+}
+
 async function syncSource(source) {
   const baseUrl = process.env[source.envVar];
   if (!baseUrl) {
@@ -56,8 +90,10 @@ async function syncSource(source) {
 
   console.log(`Syncing ${source.id} docs from ${base}...`);
 
-  const manifestUrl = `${base}/manifest.json`;
-  const manifest = JSON.parse(await fetchText(manifestUrl));
+  const { manifest, source: manifestSource, github } = await loadManifest(
+    source,
+    base,
+  );
 
   for (const filePath of manifest.files) {
     const isPublicAsset = filePath.startsWith("public/");
@@ -66,7 +102,10 @@ async function syncSource(source) {
       continue;
     }
 
-    const url = `${base}/${filePath}`;
+    const url =
+      manifestSource === "github" && github
+        ? rawGithubFileUrl(github, filePath)
+        : `${base}/${filePath}`;
     const dest = isPublicAsset
       ? path.join(publicDir, filePath.slice("public/".length))
       : path.join(outDir, filePath);
