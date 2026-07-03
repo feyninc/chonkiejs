@@ -36,9 +36,7 @@ export function filterPageTreeForProduct(
   productId: DocsProductId,
 ): PageTree.Root {
   const slug = productSlug[productId];
-  const folder =
-    findProductFolder(tree.children, slug) ??
-    (tree.fallback ? findProductFolder(tree.fallback.children, slug) : null);
+  const folder = findProductFolderInTree(tree, slug);
 
   if (!folder) return tree;
 
@@ -46,4 +44,14 @@ export function filterPageTreeForProduct(
     ...tree,
     children: folder.children,
   };
+}
+
+export function findProductFolderInTree(
+  tree: PageTree.Root,
+  slug: string,
+): PageTree.Folder | null {
+  return (
+    findProductFolder(tree.children, slug) ??
+    (tree.fallback ? findProductFolder(tree.fallback.children, slug) : null)
+  );
 }

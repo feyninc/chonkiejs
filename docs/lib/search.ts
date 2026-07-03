@@ -1,6 +1,8 @@
 import { createFromSource } from "fumadocs-core/search/server";
 import { findPath } from "fumadocs-core/page-tree";
+import type * as PageTree from "fumadocs-core/page-tree";
 import { getProductForPageUrl } from "@/lib/doc-collections";
+import { findProductFolderInTree } from "@/lib/filter-tree";
 import { source } from "@/lib/source";
 
 type DocsPage = ReturnType<typeof source.getPages>[number];
@@ -24,24 +26,94 @@ async function resolveStructuredData(page: DocsPage) {
   return undefined;
 }
 
-function resolveTreeBreadcrumbs(page: DocsPage): string[] {
-  const breadcrumbs: string[] = [];
-  const pageTree = source.getPageTree(page.locale);
-  const path = findPath(
-    pageTree.children,
-    (node) => node.type === "page" && node.url === page.url,
-  );
+function folderTitleFromUrl(folder: PageTree.Folder, segment: string): boolean {
+  const url =
+    folder.index?.url ??
+    folder.children.find((c) => c.type === "page")?.url;
 
-  if (!path) return breadcrumbs;
+  if (!url || typeof url !== "string") return false;
+  return url.split("/").filter(Boolean).includes(segment);
+}
+
+function resolveBreadcrumbsFromUrl(
+  tree: PageTree.Root,
+  url: string,
+  productSlug: string | null,
+): string[] {
+  const segments = url.split("/").filter(Boolean);
+  if (productSlug && segments[0] === productSlug) {
+    segments.shift();
+  }
+
+  const productFolder = productSlug
+    ? findProductFolderInTree(tree, productSlug)
+    : null;
+  let nodes = productFolder?.children ?? tree.children;
+  const breadcrumbs: string[] = [];
+
+  for (const segment of segments.slice(0, -1)) {
+    const folder = nodes.find(
+      (node): node is PageTree.Folder =>
+        node.type === "folder" && folderTitleFromUrl(node, segment),
+    );
+
+    if (!folder) break;
+
+    if (folder.name) breadcrumbs.push(String(folder.name));
+    nodes = folder.children;
+  }
+
+  return breadcrumbs;
+}
+
+function resolveTreeBreadcrumbs(page: DocsPage): string[] {
+  const product = getProductForPageUrl(page.url);
+  const productSlug = product?.id ?? null;
+  const pageTree = source.getPageTree(page.locale);
+
+  const searchRoots: PageTree.Node[][] = [];
+  if (productSlug) {
+    const productFolder = findProductFolderInTree(pageTree, productSlug);
+    if (productFolder) searchRoots.push(productFolder.children);
+  }
+  searchRoots.push(pageTree.children);
+
+  let path: PageTree.Node[] | null = null;
+  for (const roots of searchRoots) {
+    path = findPath(
+      roots,
+      (node) => node.type === "page" && node.url === page.url,
+    );
+    if (path) break;
+  }
+
+  if (!path) {
+    return resolveBreadcrumbsFromUrl(pageTree, page.url, productSlug);
+  }
 
   path.pop();
-  if (pageTree.name) breadcrumbs.push(String(pageTree.name));
-
+  const breadcrumbs: string[] = [];
   for (const segment of path) {
     if (segment.name) breadcrumbs.push(String(segment.name));
   }
 
   return breadcrumbs;
+}
+
+function buildSearchBreadcrumbs(
+  product: ReturnType<typeof getProductForPageUrl>,
+  treeBreadcrumbs: string[],
+): string[] | undefined {
+  if (!product) return treeBreadcrumbs.length > 0 ? treeBreadcrumbs : undefined;
+
+  const crumbs = [
+    product.label,
+    ...treeBreadcrumbs.filter(
+      (crumb) => crumb.toLowerCase() !== product.label.toLowerCase(),
+    ),
+  ];
+
+  return crumbs.length > 0 ? crumbs : undefined;
 }
 
 async function buildPageSearchIndex(page: DocsPage) {
@@ -54,16 +126,14 @@ async function buildPageSearchIndex(page: DocsPage) {
 
   const product = getProductForPageUrl(page.url);
   const treeBreadcrumbs = resolveTreeBreadcrumbs(page);
-  const breadcrumbs = product
-    ? [product.label, ...treeBreadcrumbs.filter((crumb) => crumb !== product.label)]
-    : treeBreadcrumbs;
+  const breadcrumbs = buildSearchBreadcrumbs(product, treeBreadcrumbs);
 
   return {
     id: page.url,
     title: page.data.title ?? page.url,
     description: page.data.description,
     url: page.url,
-    breadcrumbs: breadcrumbs.length > 0 ? breadcrumbs : undefined,
+    breadcrumbs,
     structuredData,
   };
 }
