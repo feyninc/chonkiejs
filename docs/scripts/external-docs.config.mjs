@@ -21,6 +21,11 @@ export const externalDocSources = [
     id: "chonkie",
     envVar: "CHONKIE_DOCS_URL",
     outDir: "chonkie",
+    githubFallback: {
+      owner: "feyninc",
+      repo: "chonkie",
+      branch: "main",
+    },
     /** When true, synced MDX points images at CHONKIE_DOCS_URL instead of /assets/. */
     rewriteAssetUrls: true,
     transforms: [
