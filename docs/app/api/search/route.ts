@@ -1,8 +1,5 @@
-import { createFromSource } from 'fumadocs-core/search/server';
-import { source } from '@/lib/source';
+import { searchServer } from '@/lib/search';
 
 export const dynamic = 'force-static';
 
-const server = createFromSource(source);
-
-export const { staticGET: GET } = server;
+export const { staticGET: GET } = searchServer;

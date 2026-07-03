@@ -1,10 +1,9 @@
 import { loader } from "fumadocs-core/source";
 import { icons } from "lucide-react";
 import { createElement } from "react";
-import { docs } from "@/.source";
+import { buildLoaderSourceInput } from "@/lib/doc-collections";
 
-export const source = loader({
-  source: docs.toFumadocsSource(),
+export const source = loader(buildLoaderSourceInput(), {
   baseUrl: "/",
   icon(icon) {
     if (icon && icon in icons)

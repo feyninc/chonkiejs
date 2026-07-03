@@ -1,0 +1,50 @@
+[
+  {
+    "id": 341624221,
+    "name": "core-v0.0.11",
+    "tag": "core-v0.0.11",
+    "published_at": "2026-06-18T20:18:18Z",
+    "body": "## What's Changed\r\n* feat: add handshakes by @chonk-lain in https://github.com/chonkie-inc/chonkiejs/pull/50\r\n* chore: use OIDC by @chonk-lain in https://github.com/chonkie-inc/chonkiejs/pull/52\r\n* chore: update publish workflow by @chonk-lain in https://github.com/chonkie-inc/chonkiejs/pull/53\r\n\r\n\r\n**Full Changelog**: https://github.com/chonkie-inc/chonkiejs/compare/core-v0.0.10...core-v0.0.11",
+    "html_url": "https://github.com/feyninc/chonkiejs/releases/tag/core-v0.0.11"
+  },
+  {
+    "id": 321345537,
+    "name": "core-v0.0.10",
+    "tag": "core-v0.0.10",
+    "published_at": "2026-05-12T18:43:53Z",
+    "body": "## What's Changed\r\n* build(core): migrate from tsc+tsc-alias to tsdown by @azizbecha in https://github.com/chonkie-inc/chonkiejs/pull/44\r\n* Feat: update code chunker by @chonk-lain in https://github.com/chonkie-inc/chonkiejs/pull/47\r\n* chore: update CI by @chonk-lain in https://github.com/chonkie-inc/chonkiejs/pull/48\r\n\r\n## New Contributors\r\n* @azizbecha made their first contribution in https://github.com/chonkie-inc/chonkiejs/pull/44\r\n\r\n**Full Changelog**: https://github.com/chonkie-inc/chonkiejs/compare/core-v0.0.9...core-v0.0.10",
+    "html_url": "https://github.com/feyninc/chonkiejs/releases/tag/core-v0.0.10"
+  },
+  {
+    "id": 302470915,
+    "name": "core-v0.0.9",
+    "tag": "core-v0.0.9",
+    "published_at": "2026-03-27T17:10:58Z",
+    "body": "## What's Changed\r\n* feat: add semantic chunker by @chonk-lain in https://github.com/chonkie-inc/chonkiejs/pull/40\r\n* feat: add CodeChunker and SentenceChunker by @chonk-lain in https://github.com/chonkie-inc/chonkiejs/pull/41\r\n* bump version by @chonk-lain in https://github.com/chonkie-inc/chonkiejs/pull/42\r\n* add benchmark by @chonk-lain in https://github.com/chonkie-inc/chonkiejs/pull/43\r\n\r\n\r\n**Full Changelog**: https://github.com/chonkie-inc/chonkiejs/compare/core-v0.0.8...core-v0.0.9",
+    "html_url": "https://github.com/feyninc/chonkiejs/releases/tag/core-v0.0.9"
+  },
+  {
+    "id": 296449467,
+    "name": "core-v0.0.8",
+    "tag": "core-v0.0.8",
+    "published_at": "2026-03-12T23:21:02Z",
+    "body": "## @chonkiejs/core v0.0.8\n\n### Bug Fixes\n- Fix Tokenizer `encode`/`decode` for non-BMP Unicode characters (emoji, etc.) — was using `charCodeAt`/`fromCharCode`, now uses `codePointAt`/`fromCodePoint` (#33)\n- Fix RecursiveChunker sentence-level splitting being completely non-functional — multi-char delimiters like `['. ', '! ', '? ']` were joined into a string where space became a delimiter, causing all segments to collapse into one (#39)\n- Fix TokenChunker silent index failure — replaced fragile `indexOf`-based lookup with deterministic offset tracking (#35)\n- Fix TableChunker `startIndex`/`endIndex` inconsistency between single and multi-chunk cases (#36)\n- Consolidate duplicate WASM initialization from `FastChunker` and `RecursiveChunker` into shared module (#37)\n\n### Tests\n- Add Tokenizer unit tests (9 tests) — encode/decode round-trip, Unicode, create factory\n- Add TokenChunker test coverage (14 tests) — chunking, overlap, indices, Unicode (#34)\n- Add TableChunker index consistency test\n- Total tests: 47 → 71",
+    "html_url": "https://github.com/feyninc/chonkiejs/releases/tag/core-v0.0.8"
+  },
+  {
+    "id": 278560153,
+    "name": "core-v0.0.7",
+    "tag": "core-v0.0.7",
+    "published_at": "2026-01-21T09:32:01Z",
+    "body": "## @chonkiejs/core v0.0.7\n\n- Integrate @chonkiejs/chunk WASM for split and merge operations\n- Use WASM split_offsets for delimiter-based text splitting\n- Use WASM merge_splits for combining segments into chunks\n- Add initWasm function for explicit WASM initialization\n- Re-export low-level chunk functions from @chonkiejs/chunk",
+    "html_url": "https://github.com/feyninc/chonkiejs/releases/tag/core-v0.0.7"
+  },
+  {
+    "id": 252949806,
+    "name": "v0.0.4",
+    "tag": "v0.0.4",
+    "published_at": "2025-10-08T08:27:42Z",
+    "body": "## What's Changed\r\n* Refactor: Re-write `chonkie-ts` into separate packages for better dependency handling! by @chonknick in https://github.com/chonkie-inc/chonkiejs/pull/27\r\n\r\n**Full Changelog**: https://github.com/chonkie-inc/chonkiejs/commits/v0.0.4",
+    "html_url": "https://github.com/feyninc/chonkiejs/releases/tag/v0.0.4"
+  }
+]

@@ -6,31 +6,31 @@ description: "Available chunkers in ChonkieJS"
 ChonkieJS provides multiple chunking strategies for different text processing needs. All chunkers use an async `create()` factory and return `Promise<Chunk[]>` from their `chunk()` method.
 
 <Callout type="info">
-  Not sure which chunker to use? Check out the [Choosing a Chunker](/chunkers/choosing-a-chunker) guide for recommendations based on your use case.
+  Not sure which chunker to use? Check out the [Choosing a Chunker](/chonkiejs/chunkers/choosing-a-chunker) guide for recommendations based on your use case.
 </Callout>
 
 ## Available Chunkers
 
 <Cards>
-  <Card title="RecursiveChunker" href="/chunkers/recursive-chunker">
+  <Card title="RecursiveChunker" href="/chonkiejs/chunkers/recursive-chunker">
     Splits text hierarchically using customizable rules. Best for general-purpose chunking.
   </Card>
-  <Card title="TokenChunker" href="/chunkers/token-chunker">
+  <Card title="TokenChunker" href="/chonkiejs/chunkers/token-chunker">
     Fixed-size token-based chunking. Best for consistent chunk sizes.
   </Card>
-  <Card title="SentenceChunker" href="/chunkers/sentence-chunker">
+  <Card title="SentenceChunker" href="/chonkiejs/chunkers/sentence-chunker">
     Splits at sentence boundaries. Preserves semantic completeness.
   </Card>
-  <Card title="SemanticChunker" href="/chunkers/semantic-chunker">
+  <Card title="SemanticChunker" href="/chonkiejs/chunkers/semantic-chunker">
     Groups content by semantic similarity using custom embeddings.
   </Card>
-  <Card title="CodeChunker" href="/chunkers/code-chunker">
+  <Card title="CodeChunker" href="/chonkiejs/chunkers/code-chunker">
     AST-aware chunking for source code files.
   </Card>
-  <Card title="TableChunker" href="/chunkers/table-chunker">
+  <Card title="TableChunker" href="/chonkiejs/chunkers/table-chunker">
     Chunks markdown/HTML tables by row or token count.
   </Card>
-  <Card title="FastChunker" href="/chunkers/fast-chunker">
+  <Card title="FastChunker" href="/chonkiejs/chunkers/fast-chunker">
     High-performance byte-based chunking with SIMD acceleration.
   </Card>
 </Cards>
