@@ -1,6 +1,6 @@
 {
   "name": "@chonkiejs/token",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "HuggingFace tokenizer support for Chonkie - extends @chonkiejs/core with real tokenization",
   "license": "MIT",
   "homepage": "https://docs.chonkie.ai",
@@ -23,6 +23,7 @@
   "scripts": {
     "clean": "rimraf dist",
     "build": "npm run clean && tsc && tsc-alias -p tsconfig.json --resolve-full-paths",
+    "prepublishOnly": "npm run build",
     "test": "echo 'No tests for @chonkiejs/token yet'"
   },
   "files": [
