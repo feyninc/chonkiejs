@@ -23,6 +23,7 @@
   "scripts": {
     "clean": "rimraf dist",
     "build": "npm run clean && tsc && tsc-alias -p tsconfig.json --resolve-full-paths",
+    "prepublishOnly": "npm run build",
     "test": "echo 'No tests for @chonkiejs/token yet'"
   },
   "files": [
