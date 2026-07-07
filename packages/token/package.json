@@ -6,7 +6,7 @@
   "homepage": "https://docs.chonkie.ai",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/chonkie-inc/chonkiejs.git",
+    "url": "git+https://github.com/feyninc/chonkiejs.git",
     "directory": "packages/token"
   },
   "author": "Bhavnick Minhas",
