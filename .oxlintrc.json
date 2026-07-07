@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "categories": {
+    "correctness": "warn"
+  },
+  "rules": {},
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/node_modules/**",
+    "legacy/**",
+    "docs/.next/**",
+    "docs/public/**"
+  ]
+}
