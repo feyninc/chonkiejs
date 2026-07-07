@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ES2021",
-    "module": "ES2020",
+    "module": "ESNext",
     "lib": ["ES2021"],
     "moduleResolution": "bundler",
     "outDir": "./dist",
