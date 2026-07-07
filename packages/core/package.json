@@ -23,6 +23,7 @@
   "scripts": {
     "clean": "rimraf dist",
     "build": "npm run clean && tsdown",
+    "prepack": "npm run build",
     "test": "vitest run"
   },
   "files": [
