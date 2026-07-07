@@ -44,7 +44,6 @@ jobs:
   publish-token:
     name: Publish @chonkiejs/token
     runs-on: ubuntu-latest
-    environment: npm
     permissions:
       contents: read
       id-token: write
