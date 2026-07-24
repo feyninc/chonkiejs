@@ -11,7 +11,7 @@
     "postinstall": "fumadocs-mdx"
   },
   "dependencies": {
-    "dompurify": "^3.4.11",
+    "dompurify": "^3.4.12",
     "fumadocs-core": "^16.10.0",
     "fumadocs-mdx": "^15.0.0",
     "fumadocs-ui": "^16.10.0",
