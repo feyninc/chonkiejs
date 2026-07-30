@@ -1,4 +1,5 @@
 import { init as initChunk, split_offsets, merge_splits } from '@chonkiejs/chunk';
+import { toCharOffsets } from './offsets';
 import { Tokenizer } from '@/tokenizer';
 import { Chunk, RecursiveRules, RecursiveLevel, IncludeDelim } from '@/types';
 
@@ -134,11 +135,11 @@ export class RecursiveChunker {
   private splitText(text: string, level: RecursiveLevel): string[] {
     // Whitespace splitting - use WASM split with space delimiter
     if (level.whitespace) {
-      const offsets = split_offsets(text, {
+      const offsets = toCharOffsets(text, split_offsets(text, {
         delimiters: ' ',
         includeDelim: 'none',
         minChars: 0
-      });
+      }));
       return offsets.map(([start, end]) => text.slice(start, end));
     }
 
@@ -159,11 +160,11 @@ export class RecursiveChunker {
         level.includeDelim === 'prev' ? 'prev' :
         level.includeDelim === 'next' ? 'next' : 'none';
 
-      const offsets = split_offsets(text, {
+      const offsets = toCharOffsets(text, split_offsets(text, {
         delimiters: delims,
         includeDelim,
         minChars: this.minCharactersPerChunk
-      });
+      }));
 
       return offsets.map(([start, end]) => text.slice(start, end));
     }

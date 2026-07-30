@@ -3,6 +3,7 @@
  */
 
 import { split_offsets, merge_splits } from '@chonkiejs/chunk';
+import { toCharOffsets } from './offsets';
 import { initWasm } from '@/wasm';
 import { Tokenizer } from '@/tokenizer';
 import { Chunk, IncludeDelim } from '@/types';
@@ -141,11 +142,11 @@ export class SentenceChunker {
 
     // All single-byte delimiters: use WASM split_offsets
     const delimStr = this.delim.join('');
-    return split_offsets(text, {
+    return toCharOffsets(text, split_offsets(text, {
       delimiters: delimStr,
       includeDelim: this.includeDelim,
       minChars: this.minCharactersPerSentence,
-    });
+    }));
   }
 
   /**

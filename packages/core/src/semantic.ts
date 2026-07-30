@@ -7,6 +7,7 @@
  */
 
 import { init as initChunk, split_offsets } from '@chonkiejs/chunk';
+import { toCharOffsets } from './offsets';
 import { Tokenizer } from '@/tokenizer';
 import { Chunk } from '@/types';
 
@@ -369,11 +370,11 @@ export class SemanticChunker {
     const raw = this.delimiters.join('');
     const delimChars = [...new Set(raw)].filter(c => c !== ' ').join('');
 
-    const offsets = split_offsets(text, {
+    const offsets = toCharOffsets(text, split_offsets(text, {
       delimiters: delimChars,
       includeDelim: this.includeDelim === 'none' ? 'none' : this.includeDelim,
       minChars: this.minCharactersPerSentence,
-    });
+    }));
 
     if (offsets.length === 0) return [];
 
