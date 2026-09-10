@@ -1,4 +1,36 @@
-import { TokenChunker } from '../src';
+import { TokenChunker, Tokenizer } from '../src';
+
+/**
+ * A tiny stand-in for a subword tokenizer such as the ones @chonkiejs/token
+ * wraps around HuggingFace models: it splits on whitespace boundaries and
+ * gives each word (and each run of whitespace) its own token, so a token
+ * index has no fixed relationship to a character index. The built-in
+ * character tokenizer can never expose that mismatch, since it always
+ * emits exactly one token per character.
+ */
+class WordTokenizer extends Tokenizer {
+  private vocab: string[] = [];
+
+  countTokens(text: string): number {
+    return this.encode(text).length;
+  }
+
+  encode(text: string): number[] {
+    const parts = text.split(/(\s+)/).filter((part) => part.length > 0);
+    return parts.map((part) => {
+      const existing = this.vocab.indexOf(part);
+      if (existing !== -1) {
+        return existing;
+      }
+      this.vocab.push(part);
+      return this.vocab.length - 1;
+    });
+  }
+
+  decode(tokens: number[]): string {
+    return tokens.map((token) => this.vocab[token]).join('');
+  }
+}
 
 describe('TokenChunker', () => {
   describe('Creation', () => {
@@ -118,6 +150,35 @@ describe('TokenChunker', () => {
       const text = 'Hi 🦛 there';
       const chunks = await chunker.chunk(text);
       expect(chunks.length).toBeGreaterThan(0);
+      for (const chunk of chunks) {
+        expect(text.slice(chunk.startIndex, chunk.endIndex)).toBe(chunk.text);
+      }
+    });
+  });
+
+  describe('Tokenizers where a token is not one character', () => {
+    it('should keep indices aligned when tokens span multiple characters', async () => {
+      const chunker = await TokenChunker.create({
+        tokenizer: new WordTokenizer(),
+        chunkSize: 2,
+      });
+      const text = 'the quick brown fox jumps over the lazy dog';
+      const chunks = await chunker.chunk(text);
+      expect(chunks.length).toBeGreaterThan(1);
+      for (const chunk of chunks) {
+        expect(text.slice(chunk.startIndex, chunk.endIndex)).toBe(chunk.text);
+      }
+    });
+
+    it('should keep indices aligned with overlap for such tokenizers too', async () => {
+      const chunker = await TokenChunker.create({
+        tokenizer: new WordTokenizer(),
+        chunkSize: 4,
+        chunkOverlap: 2,
+      });
+      const text = 'the quick brown fox jumps over the lazy dog';
+      const chunks = await chunker.chunk(text);
+      expect(chunks.length).toBeGreaterThan(1);
       for (const chunk of chunks) {
         expect(text.slice(chunk.startIndex, chunk.endIndex)).toBe(chunk.text);
       }
