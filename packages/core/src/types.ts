@@ -80,16 +80,12 @@ export class RecursiveLevel {
       throw new Error('Cannot use both custom delimiters and whitespace');
     }
     if (this.delimiters !== undefined) {
-      if (typeof this.delimiters === 'string' && this.delimiters.length === 0) {
+      const delims = Array.isArray(this.delimiters) ? this.delimiters : [this.delimiters];
+      if (delims.some(d => typeof d !== 'string' || d.length === 0)) {
         throw new Error('Delimiter cannot be empty string');
       }
-      if (Array.isArray(this.delimiters)) {
-        if (this.delimiters.some(d => typeof d !== 'string' || d.length === 0)) {
-          throw new Error('Delimiter cannot be empty string');
-        }
-        if (this.delimiters.includes(' ')) {
-          throw new Error('Use whitespace option instead of space delimiter');
-        }
+      if (delims.includes(' ')) {
+        throw new Error('Use whitespace option instead of space delimiter');
       }
     }
   }
@@ -113,9 +109,11 @@ export interface RecursiveRulesConfig {
  * Default hierarchy:
  * 1. Paragraphs (split on \n\n, \r\n, \n, \r)
  * 2. Sentences (split on . ! ?)
- * 3. Pauses (split on punctuation/symbols)
- * 4. Words (split on whitespace)
- * 5. Characters (token-level splitting)
+ * 3. Openings (split before { [ < ( so brackets and tags start the next chunk)
+ * 4. Pauses (split on punctuation that ends a clause: ) ] } > " , ; ': ' — | ... `)
+ * 5. Words (split on whitespace)
+ * 6. Word parts (split on / - _ . : = & ? ' ~ inside URLs, paths and hyphenated words)
+ * 7. Characters (token-level splitting)
  */
 export class RecursiveRules {
   public levels: RecursiveLevel[];
@@ -126,13 +124,17 @@ export class RecursiveRules {
       this.levels = [
         new RecursiveLevel({ delimiters: ['\n\n', '\r\n', '\n', '\r'] }), // Paragraphs
         new RecursiveLevel({ delimiters: ['. ', '! ', '? '] }), // Sentences
+        new RecursiveLevel({ delimiters: ['{', '[', '<', '('], includeDelim: 'next' }), // Openings
         new RecursiveLevel({
           delimiters: [
-            '{', '}', '"', '[', ']', '<', '>', '(', ')', ':', ';', ',',
-            '—', '|', '~', '-', '...', '`', "'"
+            '}', '"', ']', '>', ')', ': ', ';', ',',
+            '—', '|', '...', '`'
           ]
         }), // Pauses
         new RecursiveLevel({ whitespace: true }), // Words
+        // Characters that usually sit inside a word (device-width, https:, don't)
+        // only split once whitespace is not enough.
+        new RecursiveLevel({ delimiters: ['/', '-', '_', '.', ':', '=', '&', '?', "'", '~'] }), // Word parts
         new RecursiveLevel() // Characters/tokens
       ];
     } else {

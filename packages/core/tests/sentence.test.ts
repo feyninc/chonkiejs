@@ -266,4 +266,23 @@ describe('SentenceChunker', () => {
       expect(str).toContain('512');
     });
   });
+
+  describe('Offsets', () => {
+    it('should return string offsets for non-ASCII text with a single-character delimiter', async () => {
+      const chunker = await SentenceChunker.create({ chunkSize: 6, delim: '\n', minCharactersPerSentence: 1 });
+      const text = 'café\nnaïve\n日本語\nend';
+      const chunks = await chunker.chunk(text);
+      expect(chunks.map(c => c.text)).toEqual(['café\n', 'naïve\n', '日本語\n', 'end']);
+      for (const chunk of chunks) {
+        expect(text.slice(chunk.startIndex, chunk.endIndex)).toBe(chunk.text);
+      }
+      expect(chunks[chunks.length - 1].endIndex).toBe(text.length);
+    });
+
+    it('should split on non-ASCII delimiters', async () => {
+      const chunker = await SentenceChunker.create({ chunkSize: 5, delim: ['。'], minCharactersPerSentence: 1 });
+      const chunks = await chunker.chunk('今日は。晴れ。');
+      expect(chunks.map(c => c.text)).toEqual(['今日は。', '晴れ。']);
+    });
+  });
 });

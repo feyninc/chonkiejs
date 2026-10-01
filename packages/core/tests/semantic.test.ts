@@ -62,4 +62,27 @@ describe('SemanticChunker', () => {
     const chunks = await chunker.chunk("");
     expect(chunks).toEqual([]);
   });
+
+  it('should split non-ASCII text into sentences at string offsets', async () => {
+    const embedded: string[] = [];
+    const embeddings = async (texts: string[]) => {
+      embedded.push(...texts);
+      return texts.map(() => [1, 0]);
+    };
+    const chunker = await SemanticChunker.create({
+      embeddings,
+      threshold: 0.5,
+      similarityWindow: 1,
+      minCharactersPerSentence: 1,
+      chunkSize: 1000,
+    });
+    const text = 'Café “cats” purr. Cats nap. Dogs “bark” loud. Dogs run.';
+    const chunks = await chunker.chunk(text);
+    expect(embedded).toContain('Café “cats” purr. ');
+    expect(embedded).toContain('Dogs “bark” loud. ');
+    expect(chunks.map(c => c.text).join('')).toBe(text);
+    for (const chunk of chunks) {
+      expect(text.slice(chunk.startIndex, chunk.endIndex)).toBe(chunk.text);
+    }
+  });
 });

@@ -126,4 +126,26 @@ describe('FastChunker', () => {
       expect(results[1].map(chunk => chunk.text).join('')).toBe('alpha beta gamma delta');
     });
   });
+
+  describe('UTF-8 boundaries', () => {
+    it('should never cut inside a multi-byte character', async () => {
+      const text = 'Hello 世界! 🦛 emoji café résumé. 日本語のテキスト. naïve—done';
+      for (let chunkSize = 1; chunkSize <= 20; chunkSize++) {
+        const chunker = await FastChunker.create({ chunkSize });
+        const chunks = chunker.chunk(text);
+        expect(chunks.map(c => c.text).join('')).toBe(text);
+        let pos = 0;
+        for (const chunk of chunks) {
+          expect(chunk.text).not.toContain('\uFFFD');
+          expect(chunk.startIndex).toBe(pos);
+          expect(text.slice(chunk.startIndex, chunk.endIndex)).toBe(chunk.text);
+          pos = chunk.endIndex;
+        }
+      }
+    });
+
+    it('should reject non-ASCII delimiters', async () => {
+      await expect(FastChunker.create({ delimiters: '。' })).rejects.toThrow('delimiters must be ASCII');
+    });
+  });
 });
