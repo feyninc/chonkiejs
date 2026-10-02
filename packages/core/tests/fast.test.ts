@@ -147,5 +147,10 @@ describe('FastChunker', () => {
     it('should reject non-ASCII delimiters', async () => {
       await expect(FastChunker.create({ delimiters: '。' })).rejects.toThrow('delimiters must be ASCII');
     });
+
+    it('should ignore non-ASCII delimiters when a pattern overrides them', async () => {
+      const chunker = await FastChunker.create({ delimiters: '。', pattern: 'x' });
+      expect(chunker.pattern).toBe('x');
+    });
   });
 });

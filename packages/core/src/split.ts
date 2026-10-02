@@ -72,23 +72,27 @@ export function mergeShortOffsets(
   if (offsets.length <= 1) return offsets;
 
   const result: [number, number][] = [];
-  let currentStart = offsets[0][0];
+  let current: [number, number] = offsets[0];
 
-  for (let i = 0; i < offsets.length; i++) {
-    const e = offsets[i][1];
-    const length = e - currentStart;
-
-    if (length >= minChars || i === offsets.length - 1) {
-      if (i === offsets.length - 1 && length < minChars && result.length > 0) {
-        const last = result[result.length - 1];
-        result[result.length - 1] = [last[0], e];
-      } else {
-        result.push([currentStart, e]);
-        if (i < offsets.length - 1) {
-          currentStart = offsets[i + 1][0];
-        }
-      }
+  for (let i = 1; i < offsets.length; i++) {
+    const next = offsets[i];
+    if (current[1] === next[0] && current[1] - current[0] < minChars) {
+      current = [current[0], next[1]];
+    } else {
+      result.push(current);
+      current = next;
     }
   }
+
+  if (
+    current[1] - current[0] < minChars &&
+    result.length > 0 &&
+    result[result.length - 1][1] === current[0]
+  ) {
+    result[result.length - 1] = [result[result.length - 1][0], current[1]];
+  } else {
+    result.push(current);
+  }
+
   return result;
 }

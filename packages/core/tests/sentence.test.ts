@@ -284,5 +284,16 @@ describe('SentenceChunker', () => {
       const chunks = await chunker.chunk('今日は。晴れ。');
       expect(chunks.map(c => c.text)).toEqual(['今日は。', '晴れ。']);
     });
+
+    it('should not reintroduce excluded delimiters when merging short sentences', async () => {
+      const chunker = await SentenceChunker.create({
+        chunkSize: 1,
+        delim: ['. '],
+        includeDelim: 'none',
+        minCharactersPerSentence: 5,
+      });
+      const chunks = await chunker.chunk('A. B. C.');
+      expect(chunks.map(c => c.text)).toEqual(['A', 'B', 'C.']);
+    });
   });
 });

@@ -8,6 +8,8 @@
 
   Updated the default `RecursiveRules` hierarchy: opening brackets (`{ [ < (`) now start the next chunk, `:` only splits as `': '`, and a new "word parts" level (`/ - _ . : = & ? ' ~`) runs after whitespace, so URLs, paths and hyphenated words stay intact unless they have to be split.
 
+  `FastChunker` now validates ASCII delimiters only when no overriding `pattern` is supplied. Sentence merging with `includeDelim: 'none'` preserves omitted delimiters instead of adding them back into merged text.
+
 ## 0.0.10
 
 ### Patch Changes

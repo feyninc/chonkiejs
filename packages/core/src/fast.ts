@@ -56,7 +56,7 @@ export class FastChunker {
     }
     // Delimiters are matched byte by byte, so a multi-byte character would
     // match on each of its bytes separately.
-    if (/[^\x00-\x7f]/.test(options.delimiters)) {
+    if (options.pattern === undefined && /[^\x00-\x7f]/.test(options.delimiters)) {
       throw new Error('delimiters must be ASCII characters; use pattern for non-ASCII delimiters');
     }
 

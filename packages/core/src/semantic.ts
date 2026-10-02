@@ -253,6 +253,7 @@ export class SemanticChunker {
 
   private readonly embed: EmbedFunction;
   private tokenizer: Tokenizer;
+  private readonly delimPattern: RegExp;
 
   private constructor(
     embed: EmbedFunction,
@@ -269,6 +270,7 @@ export class SemanticChunker {
     this.minSentencesPerChunk = options.minSentencesPerChunk;
     this.minCharactersPerSentence = options.minCharactersPerSentence;
     this.delimiters = options.delimiters;
+    this.delimPattern = delimiterPattern(options.delimiters);
     this.includeDelim = options.includeDelim;
     this.filterWindow = options.filterWindow;
     this.filterPolyorder = options.filterPolyorder;
@@ -355,7 +357,7 @@ export class SemanticChunker {
     if (!text || text.trim().length === 0) return [];
 
     const offsets = mergeShortOffsets(
-      splitOffsets(text, delimiterPattern(this.delimiters), this.includeDelim),
+      splitOffsets(text, this.delimPattern, this.includeDelim),
       this.minCharactersPerSentence
     );
 
