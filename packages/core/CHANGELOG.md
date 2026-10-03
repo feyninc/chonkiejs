@@ -1,5 +1,15 @@
 # @chonkiejs/core
 
+## 0.0.12
+
+### Patch Changes
+
+- Fix delimiter splitting for non-ASCII text. `RecursiveChunker`, `SentenceChunker` and `SemanticChunker` now split with a shared JS-native splitter (`src/split.ts`) that returns UTF-16 offsets and supports multi-character delimiters (longest match first). Before this, they relied on WASM byte offsets, which produced wrong `startIndex`/`endIndex` and mangled text around multi-byte characters. `FastChunker` now snaps cut points to UTF-8 character boundaries.
+
+  Updated the default `RecursiveRules` hierarchy: opening brackets (`{ [ < (`) now start the next chunk, `:` only splits as `': '`, and a new "word parts" level (`/ - _ . : = & ? ' ~`) runs after whitespace, so URLs, paths and hyphenated words stay intact unless they have to be split.
+
+  `FastChunker` now validates ASCII delimiters only when no overriding `pattern` is supplied. Sentence merging with `includeDelim: 'none'` preserves omitted delimiters instead of adding them back into merged text.
+
 ## 0.0.10
 
 ### Patch Changes

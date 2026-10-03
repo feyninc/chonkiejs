@@ -1,6 +1,6 @@
 {
   "name": "@chonkiejs/core",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "Core chunking library for Chonkie - lightweight and efficient text chunking",
   "license": "MIT",
   "homepage": "https://docs.chonkie.ai",

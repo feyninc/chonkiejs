@@ -1,18 +1,51 @@
-import { init as initChunk, split_offsets, merge_splits } from '@chonkiejs/chunk';
 import { Tokenizer } from '@/tokenizer';
 import { Chunk, RecursiveRules, RecursiveLevel, IncludeDelim } from '@/types';
+import { delimiterPattern, splitOffsets } from '@/split';
 
-// Track WASM initialization
-let wasmInitialized = false;
+/** Matches runs of whitespace for the word level. */
+const WHITESPACE_PATTERN = /\s+/g;
 
 /**
- * Initialize the WASM module. Called automatically by RecursiveChunker.create().
+ * Split text at every match of `pattern`, keeping every character.
+ *
+ * `splits.join('')` always equals `text`. With `includeDelim: 'none'` the
+ * delimiter becomes its own split rather than being dropped, so offsets stay
+ * correct. Consecutive splits shorter than `minChars` are merged together.
  */
-export async function initWasm(): Promise<void> {
-  if (!wasmInitialized) {
-    await initChunk();
-    wasmInitialized = true;
+function splitByPattern(
+  text: string,
+  pattern: RegExp,
+  includeDelim: IncludeDelim,
+  minChars: number
+): string[] {
+  const segments: string[] = [];
+  let cursor = 0;
+  for (const [start, end] of splitOffsets(text, pattern, includeDelim)) {
+    if (start > cursor) segments.push(text.slice(cursor, start));
+    segments.push(text.slice(start, end));
+    cursor = end;
   }
+  if (cursor < text.length) {
+    segments.push(text.slice(cursor));
+  }
+
+  if (minChars <= 1) {
+    return segments;
+  }
+
+  const merged: string[] = [];
+  let current = '';
+  for (const segment of segments) {
+    current += segment;
+    if (current.length >= minChars) {
+      merged.push(current);
+      current = '';
+    }
+  }
+  if (current) {
+    merged.push(current);
+  }
+  return merged;
 }
 
 /**
@@ -43,6 +76,7 @@ export class RecursiveChunker {
   public readonly minCharactersPerChunk: number;
   private tokenizer: Tokenizer;
   private readonly CHARS_PER_TOKEN: number = 6.5;
+  private readonly patternCache = new Map<RecursiveLevel, RegExp>();
 
   private constructor(
     tokenizer: Tokenizer,
@@ -52,6 +86,9 @@ export class RecursiveChunker {
   ) {
     if (chunkSize <= 0) {
       throw new Error('chunkSize must be greater than 0');
+    }
+    if (!Number.isInteger(chunkSize)) {
+      throw new Error('chunkSize must be an integer');
     }
     if (minCharactersPerChunk <= 0) {
       throw new Error('minCharactersPerChunk must be greater than 0');
@@ -81,9 +118,6 @@ export class RecursiveChunker {
    * });
    */
   static async create(options: RecursiveChunkerOptions = {}): Promise<RecursiveChunker> {
-    // Initialize WASM module
-    await initWasm();
-
     const {
       tokenizer = 'character',
       chunkSize = 512,
@@ -129,52 +163,51 @@ export class RecursiveChunker {
   }
 
   /**
-   * Split text according to a recursive level's rules using WASM.
+   * Build (and cache) the delimiter pattern for a level.
    */
-  private splitText(text: string, level: RecursiveLevel): string[] {
-    // Whitespace splitting - use WASM split with space delimiter
+  private delimiterPattern(level: RecursiveLevel): RegExp {
+    let pattern = this.patternCache.get(level);
+    if (!pattern) {
+      const delims = Array.isArray(level.delimiters) ? level.delimiters : [level.delimiters ?? ''];
+      pattern = delimiterPattern(delims);
+      this.patternCache.set(level, pattern);
+    }
+    return pattern;
+  }
+
+  /**
+   * Split text according to a recursive level's rules.
+   */
+  private splitText(text: string, level: RecursiveLevel, minChars: number): string[] {
+    // Whitespace splitting - keep whitespace attached to the preceding word
     if (level.whitespace) {
-      const offsets = split_offsets(text, {
-        delimiters: ' ',
-        includeDelim: 'none',
-        minChars: 0
-      });
-      return offsets.map(([start, end]) => text.slice(start, end));
+      return splitByPattern(text, WHITESPACE_PATTERN, 'prev', 1);
     }
 
-    // Delimiter splitting - use WASM split
+    // Delimiter splitting
     if (level.delimiters) {
-      // WASM split_offsets treats each character in the delimiters string as a
-      // separate single-char delimiter. When the level uses multi-character
-      // delimiters (e.g. ['. ', '! ', '? ']), joining them naively would turn
-      // space into a delimiter too, collapsing all segments via minChars.
-      // Extract unique non-space characters to preserve the intended split.
-      const rawDelims = Array.isArray(level.delimiters)
-        ? level.delimiters.join('')
-        : level.delimiters;
-      const delims = [...new Set(rawDelims)].filter(c => c !== ' ').join('');
-
-      // Map includeDelim to WASM format
-      const includeDelim: 'prev' | 'next' | 'none' =
-        level.includeDelim === 'prev' ? 'prev' :
-        level.includeDelim === 'next' ? 'next' : 'none';
-
-      const offsets = split_offsets(text, {
-        delimiters: delims,
-        includeDelim,
-        minChars: this.minCharactersPerChunk
-      });
-
-      return offsets.map(([start, end]) => text.slice(start, end));
+      return splitByPattern(text, this.delimiterPattern(level), level.includeDelim, minChars);
     }
 
-    // Token-based splitting (final level)
+    // Token-based splitting (final level). A window of chunkSize tokens can
+    // decode to text that counts as more (e.g. the character tokenizer encodes
+    // an emoji as one code point but counts two UTF-16 units), so shrink the
+    // window until the decoded text fits. A single token is never split.
     const encoded = this.tokenizer.encode(text);
-    const tokenSplits: number[][] = [];
-    for (let i = 0; i < encoded.length; i += this.chunkSize) {
-      tokenSplits.push(encoded.slice(i, i + this.chunkSize));
+    const splits: string[] = [];
+    for (let i = 0; i < encoded.length;) {
+      let size = Math.min(this.chunkSize, encoded.length - i);
+      let decoded = this.tokenizer.decode(encoded.slice(i, i + size));
+      let count = this.tokenizer.countTokens(decoded);
+      while (count > this.chunkSize && size > 1) {
+        size = Math.max(1, size - (count - this.chunkSize));
+        decoded = this.tokenizer.decode(encoded.slice(i, i + size));
+        count = this.tokenizer.countTokens(decoded);
+      }
+      splits.push(decoded);
+      i += size;
     }
-    return this.tokenizer.decodeBatch(tokenSplits);
+    return splits;
   }
 
   /**
@@ -190,46 +223,32 @@ export class RecursiveChunker {
   }
 
   /**
-   * Merge splits to respect chunk size limits using WASM.
+   * Greedily merge consecutive splits while the combined token count stays
+   * within chunkSize. Splits that are already too large are kept on their own.
    */
-  private mergeSplits(
-    splits: string[],
-    tokenCounts: number[],
-    combineWhitespace: boolean = false
-  ): [string[], number[]] {
-    if (!splits.length || !tokenCounts.length) {
-      return [[], []];
-    }
-
+  private mergeSplits(splits: string[], tokenCounts: number[]): [string[], number[]] {
     if (splits.length !== tokenCounts.length) {
       throw new Error('Mismatch between splits and token counts');
     }
 
-    // If all splits exceed chunk size, return as-is
-    if (tokenCounts.every(count => count > this.chunkSize)) {
-      return [splits, tokenCounts];
-    }
-
-    // Use WASM merge_splits
-    const result = merge_splits(tokenCounts, this.chunkSize, combineWhitespace);
-
-    // Build merged strings from indices
     const merged: string[] = [];
     const combinedTokenCounts: number[] = [];
-    let currentIndex = 0;
+    let current = '';
+    let currentCount = 0;
 
-    for (let i = 0; i < result.indices.length; i++) {
-      const endIndex = result.indices[i];
-      const slicedSplits = splits.slice(currentIndex, endIndex);
-
-      if (combineWhitespace) {
-        merged.push(slicedSplits.join(' '));
-      } else {
-        merged.push(slicedSplits.join(''));
+    for (let i = 0; i < splits.length; i++) {
+      if (current && currentCount + tokenCounts[i] > this.chunkSize) {
+        merged.push(current);
+        combinedTokenCounts.push(currentCount);
+        current = '';
+        currentCount = 0;
       }
-
-      combinedTokenCounts.push(result.tokenCounts[i]);
-      currentIndex = endIndex;
+      current += splits[i];
+      currentCount += tokenCounts[i];
+    }
+    if (current) {
+      merged.push(current);
+      combinedTokenCounts.push(currentCount);
     }
 
     return [merged, combinedTokenCounts];
@@ -258,28 +277,36 @@ export class RecursiveChunker {
       throw new Error(`No rule found at level ${level}`);
     }
 
-    // Split according to current level's rules (using WASM)
-    const splits = this.splitText(text, currRule);
-    const tokenCounts = await Promise.all(
+    let splits = this.splitText(text, currRule, this.minCharactersPerChunk);
+    let tokenCounts = await Promise.all(
       splits.map(split => this.estimateTokenCount(split))
     );
 
-    // Merge splits based on level type (using WASM)
-    let merged: string[];
-    let combinedTokenCounts: number[];
-
-    if (currRule.delimiters === undefined && !currRule.whitespace) {
-      // Token level - no merging
-      [merged, combinedTokenCounts] = [splits, tokenCounts];
-    } else if (currRule.delimiters === undefined && currRule.whitespace) {
-      // Whitespace level - merge with spaces
-      [merged, combinedTokenCounts] = this.mergeSplits(splits, tokenCounts, true);
-      // Add space prefix to all but first split
-      merged = merged.slice(0, 1).concat(merged.slice(1).map(t => ' ' + t));
-    } else {
-      // Delimiter level - merge without spaces
-      [merged, combinedTokenCounts] = this.mergeSplits(splits, tokenCounts, false);
+    // Merging short segments up to minCharactersPerChunk can glue together
+    // pieces that no longer fit. Re-split those at exact delimiter boundaries
+    // before falling through to a finer level.
+    if (currRule.delimiters !== undefined && this.minCharactersPerChunk > 1) {
+      const refined: string[] = [];
+      const refinedCounts: number[] = [];
+      for (let i = 0; i < splits.length; i++) {
+        if (tokenCounts[i] > this.chunkSize) {
+          const parts = this.splitText(splits[i], currRule, 1);
+          refined.push(...parts);
+          refinedCounts.push(...await Promise.all(parts.map(p => this.estimateTokenCount(p))));
+        } else {
+          refined.push(splits[i]);
+          refinedCounts.push(tokenCounts[i]);
+        }
+      }
+      splits = refined;
+      tokenCounts = refinedCounts;
     }
+
+    // Token level - no merging; otherwise pack splits up to chunkSize
+    const [merged, combinedTokenCounts] =
+      currRule.delimiters === undefined && !currRule.whitespace
+        ? [splits, tokenCounts]
+        : this.mergeSplits(splits, tokenCounts);
 
     // Recursively process merged splits
     const chunks: Chunk[] = [];

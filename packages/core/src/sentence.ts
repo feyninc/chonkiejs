@@ -2,10 +2,9 @@
  * Sentence chunker that splits text into chunks at sentence boundaries.
  */
 
-import { split_offsets, merge_splits } from '@chonkiejs/chunk';
-import { initWasm } from '@/wasm';
 import { Tokenizer } from '@/tokenizer';
 import { Chunk, IncludeDelim } from '@/types';
+import { delimiterPattern, mergeShortOffsets, splitOffsets } from '@/split';
 
 interface Sentence {
   text: string;
@@ -43,6 +42,7 @@ export class SentenceChunker {
   public readonly minSentencesPerChunk: number;
   public readonly minCharactersPerSentence: number;
   public readonly delim: string[];
+  private readonly delimPattern: RegExp;
   public readonly includeDelim: IncludeDelim;
   private tokenizer: Tokenizer;
 
@@ -77,6 +77,7 @@ export class SentenceChunker {
     this.minSentencesPerChunk = minSentencesPerChunk;
     this.minCharactersPerSentence = minCharactersPerSentence;
     this.delim = delim;
+    this.delimPattern = delimiterPattern(delim);
     this.includeDelim = includeDelim;
   }
 
@@ -97,8 +98,6 @@ export class SentenceChunker {
    * });
    */
   static async create(options: SentenceChunkerOptions = {}): Promise<SentenceChunker> {
-    await initWasm();
-
     const {
       tokenizer = 'character',
       chunkSize = 2048,
@@ -133,105 +132,8 @@ export class SentenceChunker {
    * Split text into sentence segments using delimiters and return their offsets.
    */
   private splitTextOffsets(text: string): [number, number][] {
-    const hasMultiByte = this.delim.some(d => d.length > 1);
-
-    if (hasMultiByte) {
-      return this.splitByPatternsOffsets(text);
-    }
-
-    // All single-byte delimiters: use WASM split_offsets
-    const delimStr = this.delim.join('');
-    return split_offsets(text, {
-      delimiters: delimStr,
-      includeDelim: this.includeDelim,
-      minChars: this.minCharactersPerSentence,
-    });
-  }
-
-  /**
-   * Split text by multi-byte delimiter patterns and return offsets.
-   */
-  private splitByPatternsOffsets(text: string): [number, number][] {
-    const delimPositions: { index: number; length: number }[] = [];
-    for (const d of this.delim) {
-      let pos = 0;
-      while (pos < text.length) {
-        const idx = text.indexOf(d, pos);
-        if (idx === -1) break;
-        delimPositions.push({ index: idx, length: d.length });
-        pos = idx + d.length;
-      }
-    }
-
-    if (delimPositions.length === 0) {
-      return text.length > 0 ? [[0, text.length]] : [];
-    }
-
-    delimPositions.sort((a, b) => a.index - b.index);
-
-    const filtered: typeof delimPositions = [delimPositions[0]];
-    for (let i = 1; i < delimPositions.length; i++) {
-      const prev = filtered[filtered.length - 1];
-      if (delimPositions[i].index >= prev.index + prev.length) {
-        filtered.push(delimPositions[i]);
-      }
-    }
-
-    const offsets: [number, number][] = [];
-    let cursor = 0;
-
-    for (const dp of filtered) {
-      const delimEnd = dp.index + dp.length;
-
-      if (this.includeDelim === 'prev') {
-        const end = delimEnd;
-        if (end > cursor) offsets.push([cursor, end]);
-        cursor = end;
-      } else if (this.includeDelim === 'next') {
-        const end = dp.index;
-        if (end > cursor) offsets.push([cursor, end]);
-        cursor = dp.index;
-      } else {
-        const end = dp.index;
-        if (end > cursor) offsets.push([cursor, end]);
-        cursor = delimEnd;
-      }
-    }
-
-    if (cursor < text.length) {
-      offsets.push([cursor, text.length]);
-    }
-
-    return this.mergeShortOffsets(text, offsets);
-  }
-
-  /**
-   * Merge short offsets with the following segment.
-   */
-  private mergeShortOffsets(text: string, offsets: [number, number][]): [number, number][] {
-    if (offsets.length <= 1) return offsets;
-
-    const result: [number, number][] = [];
-    let currentStart = offsets[0][0];
-
-    for (let i = 0; i < offsets.length; i++) {
-      const [_s, e] = offsets[i];
-      const length = e - currentStart;
-
-      if (length >= this.minCharactersPerSentence || i === offsets.length - 1) {
-        // If this is the last one and it's still too short, merge it into the previous if it exists
-        if (i === offsets.length - 1 && length < this.minCharactersPerSentence && result.length > 0) {
-          const last = result[result.length - 1];
-          result[result.length - 1] = [last[0], e];
-        } else {
-          result.push([currentStart, e]);
-          if (i < offsets.length - 1) {
-            currentStart = offsets[i + 1][0];
-          }
-        }
-      }
-    }
-    return result;
+    const offsets = splitOffsets(text, this.delimPattern, this.includeDelim);
+    return mergeShortOffsets(offsets, this.minCharactersPerSentence);
   }
 
   /**

@@ -5,7 +5,7 @@ import { initWasm } from '@/wasm';
 export interface FastChunkerOptions {
   /** Target chunk size in bytes (default: 4096) */
   chunkSize?: number;
-  /** Delimiter characters for splitting (default: "\n.?") */
+  /** ASCII delimiter characters for splitting (default: "\n.?"). Use `pattern` for non-ASCII delimiters. */
   delimiters?: string;
   /** Multi-byte pattern to split on (overrides delimiters) */
   pattern?: string | Uint8Array;
@@ -15,6 +15,26 @@ export interface FastChunkerOptions {
   consecutive?: boolean;
   /** Search forward if no boundary in backward window (default: false) */
   forwardFallback?: boolean;
+}
+
+/** True for UTF-8 continuation bytes (10xxxxxx). */
+function isContinuationByte(byte: number): boolean {
+  return (byte & 0xc0) === 0x80;
+}
+
+/**
+ * Move a byte cut position to the nearest UTF-8 character boundary after
+ * `start`. Prefers moving back so the chunk stays within its byte budget, and
+ * only moves forward when the chunk would otherwise be empty.
+ */
+function charBoundary(bytes: Uint8Array, start: number, end: number): number {
+  if (end >= bytes.length) return bytes.length;
+  let cut = end;
+  while (cut > start && isContinuationByte(bytes[cut])) cut--;
+  if (cut > start) return cut;
+  cut = end;
+  while (cut < bytes.length && isContinuationByte(bytes[cut])) cut++;
+  return cut;
 }
 
 /**
@@ -33,6 +53,11 @@ export class FastChunker {
   private constructor(options: Required<Omit<FastChunkerOptions, 'pattern'>> & { pattern?: string | Uint8Array }) {
     if (options.chunkSize <= 0) {
       throw new Error('chunkSize must be greater than 0');
+    }
+    // Delimiters are matched byte by byte, so a multi-byte character would
+    // match on each of its bytes separately.
+    if (options.pattern === undefined && /[^\x00-\x7f]/.test(options.delimiters)) {
+      throw new Error('delimiters must be ASCII characters; use pattern for non-ASCII delimiters');
     }
 
     this.chunkSize = options.chunkSize;
@@ -82,19 +107,29 @@ export class FastChunker {
 
     const offsets = chunk_offsets(bytes, options);
     const chunks: Chunk[] = [];
+    let start = 0;
     let charPos = 0;
 
-    for (const [start, end] of offsets) {
+    // WASM cuts on exact byte counts, which can land inside a multi-byte
+    // UTF-8 character. Move each cut to a character boundary so every chunk
+    // decodes cleanly and the chunks still cover the text contiguously.
+    const pushChunk = (end: number) => {
       const chunkText = this.decoder.decode(bytes.subarray(start, end));
-      const chunkCharLen = chunkText.length;
       chunks.push(new Chunk({
         text: chunkText,
         startIndex: charPos,
-        endIndex: charPos + chunkCharLen,
+        endIndex: charPos + chunkText.length,
         tokenCount: 0,
       }));
-      charPos += chunkCharLen;
+      charPos += chunkText.length;
+      start = end;
+    };
+
+    for (const [, rawEnd] of offsets) {
+      const end = charBoundary(bytes, start, rawEnd);
+      if (end > start) pushChunk(end);
     }
+    if (start < bytes.length) pushChunk(bytes.length);
 
     return chunks;
   }

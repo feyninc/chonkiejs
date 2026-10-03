@@ -6,9 +6,9 @@
  * as split points — mirroring the Python SemanticChunker's peak-detection approach.
  */
 
-import { init as initChunk, split_offsets } from '@chonkiejs/chunk';
 import { Tokenizer } from '@/tokenizer';
 import { Chunk } from '@/types';
+import { delimiterPattern, mergeShortOffsets, splitOffsets } from '@/split';
 
 // ─── Embedding interface ──────────────────────────────────────────────────────
 
@@ -224,15 +224,6 @@ function findSplitIndices(
   return filtered;
 }
 
-// Track WASM init
-let wasmInitialized = false;
-async function ensureWasm(): Promise<void> {
-  if (!wasmInitialized) {
-    await initChunk();
-    wasmInitialized = true;
-  }
-}
-
 // ─── SemanticChunker ──────────────────────────────────────────────────────────
 
 /**
@@ -262,6 +253,7 @@ export class SemanticChunker {
 
   private readonly embed: EmbedFunction;
   private tokenizer: Tokenizer;
+  private readonly delimPattern: RegExp;
 
   private constructor(
     embed: EmbedFunction,
@@ -278,6 +270,7 @@ export class SemanticChunker {
     this.minSentencesPerChunk = options.minSentencesPerChunk;
     this.minCharactersPerSentence = options.minCharactersPerSentence;
     this.delimiters = options.delimiters;
+    this.delimPattern = delimiterPattern(options.delimiters);
     this.includeDelim = options.includeDelim;
     this.filterWindow = options.filterWindow;
     this.filterPolyorder = options.filterPolyorder;
@@ -304,8 +297,6 @@ export class SemanticChunker {
    * });
    */
   static async create(options: SemanticChunkerOptions): Promise<SemanticChunker> {
-    await ensureWasm();
-
     const {
       embeddings,
       threshold = 0.8,
@@ -365,15 +356,10 @@ export class SemanticChunker {
   private async prepareSentences(text: string): Promise<Sentence[]> {
     if (!text || text.trim().length === 0) return [];
 
-    // Extract unique non-space delimiter chars for the WASM single-char splitter
-    const raw = this.delimiters.join('');
-    const delimChars = [...new Set(raw)].filter(c => c !== ' ').join('');
-
-    const offsets = split_offsets(text, {
-      delimiters: delimChars,
-      includeDelim: this.includeDelim === 'none' ? 'none' : this.includeDelim,
-      minChars: this.minCharactersPerSentence,
-    });
+    const offsets = mergeShortOffsets(
+      splitOffsets(text, this.delimPattern, this.includeDelim),
+      this.minCharactersPerSentence
+    );
 
     if (offsets.length === 0) return [];
 
