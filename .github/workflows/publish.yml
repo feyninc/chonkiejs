@@ -33,6 +33,7 @@ jobs:
 
       - name: Publish to npm
         run: |
+          set -o pipefail
           pnpm --filter @chonkiejs/core exec npm publish --access public --provenance --no-git-checks 2>&1 | tee /tmp/publish.log || {
             if grep -q "previously published versions" /tmp/publish.log; then
               echo "Version already exists, skipping."
@@ -68,6 +69,7 @@ jobs:
 
       - name: Publish to npm
         run: |
+          set -o pipefail
           pnpm --filter @chonkiejs/token exec npm publish --access public --provenance --no-git-checks 2>&1 | tee /tmp/publish.log || {
             if grep -q "previously published versions" /tmp/publish.log; then
               echo "Version already exists, skipping."
