@@ -1,3 +1,6 @@
+/** Maximum number of code points passed to a single `String.fromCodePoint` call. */
+const DECODE_SLICE_SIZE = 8192;
+
 /**
  * Simple character-based tokenizer for text chunking.
  *
@@ -90,7 +93,17 @@ Available with @chonkiejs/token: gpt2, bert-base-uncased, Xenova/gpt-4, etc.
    * @returns The decoded text
    */
   decode(tokens: number[]): string {
-    return String.fromCodePoint(...tokens);
+    // Spreading every token into a single call exceeds the engine's argument
+    // limit (RangeError: Maximum call stack size exceeded) for large inputs,
+    // so decode in bounded slices.
+    if (tokens.length <= DECODE_SLICE_SIZE) {
+      return String.fromCodePoint(...tokens);
+    }
+    const parts: string[] = [];
+    for (let i = 0; i < tokens.length; i += DECODE_SLICE_SIZE) {
+      parts.push(String.fromCodePoint(...tokens.slice(i, i + DECODE_SLICE_SIZE)));
+    }
+    return parts.join('');
   }
 
   /**

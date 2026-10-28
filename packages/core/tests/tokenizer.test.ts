@@ -21,6 +21,22 @@ describe('Tokenizer', () => {
     });
   });
 
+  describe('decode with large inputs', () => {
+    it('should decode 200,000 tokens without exceeding the call stack', () => {
+      const tokenizer = new Tokenizer();
+      const tokens = new Array<number>(200_000).fill('x'.codePointAt(0)!);
+      const decoded = tokenizer.decode(tokens);
+      expect(decoded.length).toBe(200_000);
+      expect(decoded).toBe('x'.repeat(200_000));
+    });
+
+    it('should round-trip large mixed Unicode text across slice boundaries', () => {
+      const tokenizer = new Tokenizer();
+      const text = 'a🦛é漢'.repeat(50_000);
+      expect(tokenizer.decode(tokenizer.encode(text))).toBe(text);
+    });
+  });
+
   describe('countTokens', () => {
     it('should count characters for ASCII', () => {
       const tokenizer = new Tokenizer();

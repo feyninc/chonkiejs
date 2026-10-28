@@ -97,13 +97,23 @@ export class TokenChunker {
     const step = this.chunkSize - this.chunkOverlap;
     const allChars = Array.from(text);
 
+    // charOffsets[k] is the UTF-16 length of the first k characters, so each
+    // chunk's indices are looked up instead of re-joining a prefix of the text
+    // for every chunk (which is quadratic in the text length).
+    const charOffsets: number[] = new Array(allChars.length + 1);
+    charOffsets[0] = 0;
+    for (let k = 0; k < allChars.length; k++) {
+      charOffsets[k + 1] = charOffsets[k] + allChars[k].length;
+    }
+
     for (let i = 0; i < tokens.length; i += step) {
       const chunkTokens = tokens.slice(i, i + this.chunkSize);
       const chunkText = this.tokenizer.decode(chunkTokens);
-      const startCharIndex = i;
-      const endCharIndex = Math.min(i + this.chunkSize, allChars.length);
-      const startIndex = allChars.slice(0, startCharIndex).join('').length;
-      const endIndex = allChars.slice(0, endCharIndex).join('').length;
+      // slice() truncates fractional bounds, so do the same for the lookups
+      const startCharIndex = Math.trunc(i);
+      const endCharIndex = Math.min(Math.trunc(i + this.chunkSize), allChars.length);
+      const startIndex = charOffsets[Math.min(startCharIndex, allChars.length)];
+      const endIndex = charOffsets[Math.min(endCharIndex, allChars.length)];
 
       chunks.push(new Chunk({
         text: chunkText,
