@@ -111,6 +111,12 @@ export class TokenChunker {
         endIndex,
         tokenCount: chunkTokens.length,
       }));
+
+      // This window already reaches the end of the text. Any further window
+      // would be a suffix of this one (it adds no new tokens), so stop here.
+      if (i + this.chunkSize >= tokens.length) {
+        break;
+      }
     }
 
     return chunks;

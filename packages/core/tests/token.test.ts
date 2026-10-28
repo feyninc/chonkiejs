@@ -110,6 +110,47 @@ describe('TokenChunker', () => {
         expect(text.slice(chunk.startIndex, chunk.endIndex)).toBe(chunk.text);
       }
     });
+
+    it('should not emit a trailing chunk already contained in the previous chunk', async () => {
+      const chunker = await TokenChunker.create({ chunkSize: 5, chunkOverlap: 2 });
+      const chunks = await chunker.chunk('abcdefghij');
+      expect(chunks.map(c => c.text)).toEqual(['abcde', 'defgh', 'ghij']);
+      expect(chunks.map(c => [c.startIndex, c.endIndex])).toEqual([[0, 5], [3, 8], [6, 10]]);
+    });
+
+    it('should emit a single chunk when the text exactly fits chunkSize', async () => {
+      const chunker = await TokenChunker.create({ chunkSize: 5, chunkOverlap: 2 });
+      const chunks = await chunker.chunk('abcde');
+      expect(chunks.map(c => c.text)).toEqual(['abcde']);
+    });
+
+    it('should stop after the window that reaches the end when the length is a multiple of the step', async () => {
+      const chunker = await TokenChunker.create({ chunkSize: 4, chunkOverlap: 2 });
+      const chunks = await chunker.chunk('abcdefgh');
+      expect(chunks.map(c => c.text)).toEqual(['abcd', 'cdef', 'efgh']);
+    });
+
+    it('should keep a final partial chunk that still contains new tokens', async () => {
+      const chunker = await TokenChunker.create({ chunkSize: 4, chunkOverlap: 2 });
+      const chunks = await chunker.chunk('abcdefghi');
+      expect(chunks.map(c => c.text)).toEqual(['abcd', 'cdef', 'efgh', 'ghi']);
+    });
+
+    it('should never emit a chunk whose range lies inside the previous chunk', async () => {
+      for (let chunkSize = 1; chunkSize <= 8; chunkSize++) {
+        for (let chunkOverlap = 0; chunkOverlap < chunkSize; chunkOverlap++) {
+          const chunker = await TokenChunker.create({ chunkSize, chunkOverlap });
+          for (let length = 1; length <= 30; length++) {
+            const text = 'abcdefghijklmnopqrstuvwxyz0123'.slice(0, length);
+            const chunks = await chunker.chunk(text);
+            expect(chunks[chunks.length - 1].endIndex).toBe(length);
+            for (let k = 1; k < chunks.length; k++) {
+              expect(chunks[k].endIndex).toBeGreaterThan(chunks[k - 1].endIndex);
+            }
+          }
+        }
+      }
+    });
   });
 
   describe('Unicode', () => {
